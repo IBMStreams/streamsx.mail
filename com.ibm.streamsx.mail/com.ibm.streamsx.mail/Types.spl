@@ -1,0 +1,7 @@
+// *******************************************************************************
+// * Copyright (C) 2011, 2016 International Business Machines Corporation
+// * All Rights Reserved
+// *******************************************************************************
+
+namespace com.ibm.streamsx.mail;
+type MAIL=rstring to,rstring replyto,rstring from,int64 date, rstring subject,rstring content;
