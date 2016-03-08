@@ -146,6 +146,7 @@ public class ReadMail extends MailOperator {
                                 produceTuples();
                             } catch (Exception e) {
                                 Logger.getLogger(this.getClass()).error("Operator error", e);
+                                e.printStackTrace();
                             }                    
                     }
                     
@@ -288,7 +289,7 @@ public class ReadMail extends MailOperator {
 	    	 * CONTENT
 	    	 */
 	    	sb=new StringBuffer();
-	    	if(msg.isMimeType("text/plain")){
+	    	if(msg.isMimeType("text/plain") || msg.isMimeType("text/HTML")){
 	    		sb.append((String)msg.getContent());
 	    	}else if(msg.isMimeType("multipart/*")){
 	    		sb.append(parseContent(msg));
@@ -300,7 +301,7 @@ public class ReadMail extends MailOperator {
     }
     private String parseContent(Part p) throws MessagingException, IOException{
     	StringBuffer sb = new StringBuffer();
-    	if(p.isMimeType("text/plain")){
+    	if(p.isMimeType("text/plain") || p.isMimeType("text/HTML")){
     		sb.append((String)p.getContent());
     	}else if(p.isMimeType("multipart/*")){
     	    Multipart mp = (Multipart)p.getContent();
