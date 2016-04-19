@@ -14,6 +14,7 @@ import javax.mail.FolderClosedException;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
+import javax.mail.NoSuchProviderException;
 import javax.mail.Part;
 import javax.mail.Session;
 import javax.mail.Store;
@@ -116,22 +117,8 @@ public class ReadMail extends MailOperator {
         super.initialize(context);
         Logger.getLogger(this.getClass()).trace("Operator " + context.getName() + " initializing in PE: " + context.getPE().getPEId() + " in Job: " + context.getPE().getJobId() );
         
-//		mailProperties.put("mail.store.protocol", "imaps");
-//		session = Session.getInstance(mailProperties,
-//				  new javax.mail.Authenticator() {
-//					protected PasswordAuthentication getPasswordAuthentication() {
-//						return new PasswordAuthentication(username, password);
-//					}
-//				  });
-		session = Session.getInstance(mailProperties,null);
-		store=session.getStore("imaps");
-		store.connect(hostname, username,password);
-        inbox=store.getFolder(folder);
-        setPeriod(period);
-		if (inbox == null || !inbox.exists()) {
-	        Logger.getLogger(this.getClass()).trace("Operator " + context.getName() + " initializing in PE: " + context.getPE().getPEId() + " in Job: " + context.getPE().getJobId() +" Invalid folder : "+folder);
-			throw new Exception("The folder : "+folder+ " doesn't exists !");
-		}
+
+		connect(context);
         /*
          * Create the thread for producing tuples. 
          * The thread is created at initialize time but started.
@@ -159,6 +146,30 @@ public class ReadMail extends MailOperator {
          */
         processThread.setDaemon(false);
     }
+	private void connect(OperatorContext context) throws NoSuchProviderException, MessagingException, Exception {
+		session = Session.getInstance(mailProperties,null);
+		store=session.getStore("imaps");
+		store.connect(hostname, username,password);
+        inbox=store.getFolder(folder);
+        setPeriod(period);
+		if (inbox == null || !inbox.exists()) {
+	        Logger.getLogger(this.getClass()).trace("Operator " + context.getName() + " initializing in PE: " + context.getPE().getPEId() + " in Job: " + context.getPE().getJobId() +" Invalid folder : "+folder);
+			throw new Exception("The folder : "+folder+ " doesn't exists !");
+		}
+	}
+	
+	private void closeConnections() {
+		
+		try {
+			inbox.close(true);
+			store.close();
+		} catch (MessagingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+	}
 
     /**
      * Notification that initialization is complete and all input and output ports 
@@ -179,10 +190,74 @@ public class ReadMail extends MailOperator {
      * @throws Exception if an error occurs while submitting a tuple
      */
     private void produceTuples() throws Exception  {
+    	System.out.println("Process Tuples()");
         final StreamingOutput<OutputTuple> out = getOutput(0);
+        
+		listenForEmails(out);
+	    processUnreadMails();
+	    
+	    boolean supportsIdle = false;
+		try {
+			if (inbox instanceof IMAPFolder) {
+				IMAPFolder f = (IMAPFolder)inbox;
+				f.idle();
+				supportsIdle = true;
+			}
+		} catch (FolderClosedException fex) {
+			
+			System.out.println("Caught FolderClosedException, attempting to reconnect.");
+			
+			closeConnections();
+			
+			Thread.sleep(60000);
+			
+			System.out.println("Connect after 60 seconds");
+			
+			connect(getOperatorContext());
+			produceTuples();
+			
+			
+		} catch (MessagingException mex) {
+			supportsIdle = false;
+		}
+		try {
+			startIdleLoop(supportsIdle);
+		} catch (Exception e) {
+			
+			System.out.println("Caught Exceptions, attempting to reconnect.");
+			
+			closeConnections();
+			
+			Thread.sleep(60000);
+			
+			System.out.println("Connect after 60 seconds");
+			
+			connect(getOperatorContext());
+			produceTuples();
+		}
+    }
+	private void startIdleLoop(boolean supportsIdle) throws MessagingException, InterruptedException {
+		
+		System.out.println("Start Idle Loop");
+		
+		for (;;) {
+			if (supportsIdle && inbox instanceof IMAPFolder) {
+				IMAPFolder f = (IMAPFolder)inbox;
+				f.idle();
+			} else {
+				Thread.sleep(period); // sleep for freq milliseconds
+				// This is to force the IMAP server to send us
+				// EXISTS notifications. 
+				inbox.getMessageCount();
+			}
+		}
+	}
+	private void listenForEmails(final StreamingOutput<OutputTuple> out) throws MessagingException {
+		
+		System.out.println("Listen For Emails");
+		
 		inbox.open(Folder.READ_WRITE);
-	    Flags seen = new Flags(Flags.Flag.SEEN);
-	    FlagTerm unseenFlagTerm = new FlagTerm(seen,false);
+	    
 	    inbox.addMessageCountListener(new MessageCountAdapter() {
 			public void messagesAdded(MessageCountEvent ev) {
 				try {
@@ -193,37 +268,18 @@ public class ReadMail extends MailOperator {
 				}
 			}
 		});
-	    /*
+	}
+	private void processUnreadMails() throws Exception, MessagingException {
+		
+		System.out.println("Process Unread Emails");
+		
+		/*
 	     * Process all unread mails
 	     */
+	    Flags seen = new Flags(Flags.Flag.SEEN);
+	    FlagTerm unseenFlagTerm = new FlagTerm(seen,false);
 		processMessages(inbox.search(unseenFlagTerm));
-	    boolean supportsIdle = false;
-		try {
-			if (inbox instanceof IMAPFolder) {
-				IMAPFolder f = (IMAPFolder)inbox;
-				f.idle();
-				supportsIdle = true;
-//				System.out.println("IDLE done");
-			}
-		} catch (FolderClosedException fex) {
-			throw fex;
-		} catch (MessagingException mex) {
-			supportsIdle = false;
-		}
-		for (;;) {
-			if (supportsIdle && inbox instanceof IMAPFolder) {
-				IMAPFolder f = (IMAPFolder)inbox;
-				f.idle();
-//				System.out.println("IDLE done");
-			} else {
-				Thread.sleep(period); // sleep for freq milliseconds
-				// This is to force the IMAP server to send us
-				// EXISTS notifications. 
-				inbox.getMessageCount();
-			}
-		}
-//	    Message unread[] = inbox.search(unseenFlagTerm);
-    }
+	}
 
     private void processMessages(Message[] messages) throws Exception{
         final StreamingOutput<OutputTuple> out = getOutput(0);
