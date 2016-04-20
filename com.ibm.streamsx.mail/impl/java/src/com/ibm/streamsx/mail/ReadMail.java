@@ -190,7 +190,6 @@ public class ReadMail extends MailOperator {
      * @throws Exception if an error occurs while submitting a tuple
      */
     private void produceTuples() throws Exception  {
-    	System.out.println("Process Tuples()");
         final StreamingOutput<OutputTuple> out = getOutput(0);
         
 		listenForEmails(out);
@@ -203,16 +202,11 @@ public class ReadMail extends MailOperator {
 				f.idle();
 				supportsIdle = true;
 			}
-		} catch (FolderClosedException fex) {
-			
-			System.out.println("Caught FolderClosedException, attempting to reconnect.");
-			
+		} catch (FolderClosedException fex) {			
 			closeConnections();
 			
-			Thread.sleep(60000);
-			
-			System.out.println("Connect after 60 seconds");
-			
+			Thread.sleep(period);
+						
 			connect(getOperatorContext());
 			produceTuples();
 			
@@ -223,23 +217,17 @@ public class ReadMail extends MailOperator {
 		try {
 			startIdleLoop(supportsIdle);
 		} catch (Exception e) {
-			
-			System.out.println("Caught Exceptions, attempting to reconnect.");
-			
+						
 			closeConnections();
 			
-			Thread.sleep(60000);
-			
-			System.out.println("Connect after 60 seconds");
-			
+			Thread.sleep(period);
+						
 			connect(getOperatorContext());
 			produceTuples();
 		}
     }
 	private void startIdleLoop(boolean supportsIdle) throws MessagingException, InterruptedException {
-		
-		System.out.println("Start Idle Loop");
-		
+			
 		for (;;) {
 			if (supportsIdle && inbox instanceof IMAPFolder) {
 				IMAPFolder f = (IMAPFolder)inbox;
@@ -253,9 +241,7 @@ public class ReadMail extends MailOperator {
 		}
 	}
 	private void listenForEmails(final StreamingOutput<OutputTuple> out) throws MessagingException {
-		
-		System.out.println("Listen For Emails");
-		
+				
 		inbox.open(Folder.READ_WRITE);
 	    
 	    inbox.addMessageCountListener(new MessageCountAdapter() {
@@ -269,10 +255,7 @@ public class ReadMail extends MailOperator {
 			}
 		});
 	}
-	private void processUnreadMails() throws Exception, MessagingException {
-		
-		System.out.println("Process Unread Emails");
-		
+	private void processUnreadMails() throws Exception, MessagingException {		
 		/*
 	     * Process all unread mails
 	     */
