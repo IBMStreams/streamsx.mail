@@ -58,7 +58,7 @@
 	
 	<target name="toolkit-clean"
 		description="Main target: Clean all generated and downloaded toolkit files and cleans samples">
-		<ant dir="${toolkit.dir}" target="clean" />
+		<ant dir="${toolkit.dir}" target="clean-all" />
 	</target>
 
 	<target name="spldoc" depends="toolkit"
