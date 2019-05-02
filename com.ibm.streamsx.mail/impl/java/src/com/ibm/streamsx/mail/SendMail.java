@@ -28,6 +28,9 @@ import com.ibm.streams.operator.StreamingInput;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.TupleAttribute;
 import com.ibm.streams.operator.compile.OperatorContextChecker;
+import com.ibm.streams.operator.metrics.Metric;
+import com.ibm.streams.operator.metrics.Metric.Kind;
+import com.ibm.streams.operator.model.CustomMetric;
 import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.InputPortSet.WindowMode;
 import com.ibm.streams.operator.model.InputPortSet.WindowPunctuationInputMode;
@@ -57,274 +60,316 @@ import com.ibm.streams.operator.model.PrimitiveOperator;
  */
 @PrimitiveOperator(name="SendMail", description=SendMail.DESCRIPTION)
 @Libraries({"lib/*"})
-@InputPorts({@InputPortSet(description="Port that ingests tuples", cardinality=1, optional=false, windowingMode=WindowMode.NonWindowed, windowPunctuationInputMode=WindowPunctuationInputMode.Oblivious), @InputPortSet(description="Optional input ports", optional=true, windowingMode=WindowMode.NonWindowed, windowPunctuationInputMode=WindowPunctuationInputMode.Oblivious)})
+@InputPorts(
+	{
+		@InputPortSet(
+			description="Every tuple received from this port triggers an outgoing e-mail. The attributes if the input stream "
+				+ "may be used as parameters and content for the e-mail to sent. These attributes are configured through "
+				+ "the parameters `toAttribute`, `ccAttribute`, `bccAttribute`, `subject` and `content`.",
+			cardinality=1,
+			optional=false,
+			windowingMode=WindowMode.NonWindowed,
+			windowPunctuationInputMode=WindowPunctuationInputMode.Oblivious
+		)
+	}
+)
 public class SendMail extends AbstractOperator {
 
-    public static final String DESCRIPTION = "Operator SendMail\\n"
-            + "This operator sends out an e-mail, when a tuple arrives at the input port. The operator has no output port.";
+	public static final String DESCRIPTION = "Operator SendMail\\n"
+			+ "This operator sends out an e-mail, when a tuple arrives at the input port. The operator has no output port.";
 
-    //register trace and log facility
-    protected static Logger logger = Logger.getLogger("com.ibm.streams.operator.log." + SendMail.class.getName());
-    protected static final Logger tracer = Logger.getLogger(SendMail.class.getName());
+	//register trace and log facility
+	protected static Logger logger = Logger.getLogger("com.ibm.streams.operator.log." + SendMail.class.getName());
+	protected static final Logger tracer = Logger.getLogger(SendMail.class.getName());
 
-    //operator enums
-    public enum EncryptionType {
-        NONE,
-        STARTTLS,
-        TLS
-    }
-    
-    //parameter values
-    private EncryptionType encryptionType = EncryptionType.NONE;
-    private String smtpHost = null;
-    private int    smtpPort = -1;
-    private String from = null;
-    private String username = null;
-    private String password = null;
-    //protected int batch=1;
-    private String to = null;
-    private String cc = null;
-    private String bcc = null;
-    private TupleAttribute<Tuple, String> toAttribute = null;
-    private TupleAttribute<Tuple, String> ccAttribute = null;
-    private TupleAttribute<Tuple, String> bccAttribute = null;
-    private String[] subject = {"ALERT form Streams !"};
-    private String[] content = {};
-    
-    //other operator state values
-    protected Properties mailProperties = new Properties();
-    protected Session session;
+	//operator enums
+	public enum EncryptionType {
+		NONE,
+		STARTTLS,
+		TLS
+	}
+	
+	//parameter values
+	private EncryptionType encryptionType = EncryptionType.NONE;
+	private String smtpHost = null;
+	private int	smtpPort = -1;
+	private String from = null;
+	private String username = null;
+	private String password = null;
+	private String to = null;
+	private String cc = null;
+	private String bcc = null;
+	private TupleAttribute<Tuple, String> toAttribute = null;
+	private TupleAttribute<Tuple, String> ccAttribute = null;
+	private TupleAttribute<Tuple, String> bccAttribute = null;
+	private String[] subject = {"ALERT form Streams !"};
+	private String[] content = {" "};
+	private boolean enableOperatorLog = false;
 
-    /*@Parameter( description="number of messages to wait before sending",name="batch", optional=true)
-    public void setBatch(int batch) {
-        this.batch = batch;
-    }*/
-    @Parameter(optional=true, description="Encryption method to be used for the SMTP connection. Default is NONE")
-    public void setEncryptionType(EncryptionType encryptionType) {
-        this.encryptionType = encryptionType;
-    }
-    @Parameter(optional=false, description="The SMTP relay host name/address.")
-    public void setSmtpHost(String smtpHost) {
-        this.smtpHost = smtpHost;
-    }
-    @Parameter(optional=true, description="The SMTP host port. Defaults to 25 if `encryptionType` is `NONE` or `STARTTLS`; "
-        + "defaults to 587 if `EncryptionType` is `TLS`")
-    public void setSmtpPort(int smtpPort) {
-        this.smtpPort = smtpPort;
-    }
-    @Parameter(optional=false, description="Email address to use for SMTP MAIL command. This sets the envelope return "
-        + "address. This address should be a valid and active e-mail account.")
-    public void setFrom(String from) {
-        this.from = from;
-    }
-    @Parameter(optional=true, description="The user name for SMTP. This parameter is required if the SMTP server requires "
-        + "authorization. The default is the value of parameter from.")
-    public void setUsername(String username) {
-        this.username = username;
-    }
-    @Parameter(optional=true, description="The password for the SMTP account")
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    @Parameter(optional=true, description="Comma separated list of the to recipients. If this parameter is set, parameter "
-        + "toAttribute is not allowed. One of `to` and `toAttribute` is required.")
-    public void setTo(String to) throws AddressException {
-         this.to = to;
-    }
-    @Parameter(optional=true, description="Comma separated list of the cc recipients. If this parameter is set, parameter "
-        + "`ccAttribute` is not allowed.")
-    public void setCc(String cc) throws AddressException {
-        this.cc = cc;
-    }
-    @Parameter(optional=true, description="Comma separated list of the bcc recipients. If this parameter is set, parameter `bccAttribute` "
-        + "is not allowed.")
-    public void setBcc(String bcc) throws AddressException {
-        this.bcc = bcc;
-    }
-    @Parameter(optional=true, description="The name of the input stream attribute with a comma separated list of the to "
-        + "recipients. If this parameter is set, parameter `to` is not allowed. One of `to` and `toAttribute` is required.")
-    public void setToAttribute(TupleAttribute<Tuple, String> toAttribute) {
-         this.toAttribute = toAttribute;
-    }
-    @Parameter(optional=true, description="The name of the input stream attribute with a comma separated list of the cc "
-        + "recipients. If this parameter is set, parameter `cc` is not allowed.")
-    public void setCcAttribute(TupleAttribute<Tuple, String> ccAttribute) {
-        this.ccAttribute = ccAttribute;
-    }
-    @Parameter(optional=true, description="The name of the input stream attribute with a comma separated list of the bcc "
-         + "recipients. If this parameter is set, parameter `bcc` is not allowed.")
-    public void setBccAttribute(TupleAttribute<Tuple, String> bccAttribute) {
-        this.bccAttribute = bccAttribute;
-    }
-    @Parameter(optional=true, description="The subject of the message. The subject string of the message is concatenated "
-        + "from the parameter components. If one component equals the name of an input string attribute, the attribute "
-        + "value is taken instead. The default value is 'ALERT form Streams !'")
-    public void setSubject(String[] subject) {
-        this.subject = subject;
-    }
-    @Parameter(optional=true, description="Content of the message to send. The content string of the message is concatenated "
-        + "from the parameter components. If one component equals the name of an input string attribute, the attribute "
-        + "value is taken instead. The default is the empty string")
-    public void setContent(String[] content) {
-        this.content = content;
-    }
+	private Metric nEmailFailures;
 
-    @ContextCheck(compile = true)
-    public static void checkMethodParams(OperatorContextChecker occ) {
-        occ.checkExcludedParameters("to", "toAttribute");
-        occ.checkExcludedParameters("cc", "ccAttribute");
-        occ.checkExcludedParameters("bcc", "bccAttribute");
-        Set<String> parameterNames = occ.getOperatorContext().getParameterNames();
-        if ( ! parameterNames.contains("to") && ! parameterNames.contains("toAttribute")) {
-            occ.setInvalidContext("One of parameter 'to' and 'toAttribute' is required", new Object[]{});
-        }
-    }
+	//other operator state values
+	protected Properties mailProperties = new Properties();
+	protected Session session;
 
-    /**
-     * Initialize this operator. Called once before any tuples are processed.
-     * @param context OperatorContext for this operator.
-     * @throws Exception Operator failure, will cause the enclosing PE to terminate.
-     */
-    @Override
-    public synchronized void initialize(OperatorContext context) throws Exception {
-        // Must call super.initialize(context) to correctly setup an operator.
-        super.initialize(context);
+	@Parameter(optional=true, description="Encryption method to be used for the SMTP connection. Default is NONE")
+	public void setEncryptionType(EncryptionType encryptionType) {
+		this.encryptionType = encryptionType;
+	}
+	@Parameter(optional=false, description="The SMTP relay host name/address.")
+	public void setSmtpHost(String smtpHost) {
+		this.smtpHost = smtpHost;
+	}
+	@Parameter(optional=true, description="The SMTP host port. Defaults to 25 if `encryptionType` is `NONE` or `STARTTLS`; "
+		+ "defaults to 587 if `EncryptionType` is `TLS`")
+	public void setSmtpPort(int smtpPort) {
+		this.smtpPort = smtpPort;
+	}
+	@Parameter(optional=false, description="Email address to use for SMTP MAIL command. This sets the envelope return "
+		+ "address. This address should be a valid and active e-mail account.")
+	public void setFrom(String from) throws AddressException {
+		//check address format
+		@SuppressWarnings("unused")
+		InternetAddress ia = new InternetAddress(from);
+		this.from = from;
+	}
+	@Parameter(optional=true, description="The user name for SMTP. This parameter is required if the SMTP server requires "
+		+ "authorization. The default is the value of parameter from.")
+	public void setUsername(String username) {
+		this.username = username;
+	}
+	@Parameter(optional=true, description="The password for the SMTP account")
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	@Parameter(optional=true, description="Comma separated list of the to recipients. If this parameter is set, parameter "
+		+ "toAttribute is not allowed. One of `to` and `toAttribute` is required.")
+	public void setTo(String to) throws AddressException {
+		@SuppressWarnings("unused")
+		InternetAddress ias[] = InternetAddress.parse(to);
+		this.to = to;
+	}
+	@Parameter(optional=true, description="Comma separated list of the cc recipients. If this parameter is set, parameter "
+		+ "`ccAttribute` is not allowed.")
+	public void setCc(String cc) throws AddressException {
+		@SuppressWarnings("unused")
+		InternetAddress ias[] = InternetAddress.parse(cc);
+		this.cc = cc;
+	}
+	@Parameter(optional=true, description="Comma separated list of the bcc recipients. If this parameter is set, parameter `bccAttribute` "
+		+ "is not allowed.")
+	public void setBcc(String bcc) throws AddressException {
+		@SuppressWarnings("unused")
+		InternetAddress ias[] = InternetAddress.parse(bcc);
+		this.bcc = bcc;
+	}
+	@Parameter(optional=true, description="The name of the input stream attribute with a comma separated list of the to "
+		+ "recipients. If this parameter is set, parameter `to` is not allowed. One of `to` and `toAttribute` is required.")
+	public void setToAttribute(TupleAttribute<Tuple, String> toAttribute) {
+		 this.toAttribute = toAttribute;
+	}
+	@Parameter(optional=true, description="The name of the input stream attribute with a comma separated list of the cc "
+		+ "recipients. If this parameter is set, parameter `cc` is not allowed.")
+	public void setCcAttribute(TupleAttribute<Tuple, String> ccAttribute) {
+		this.ccAttribute = ccAttribute;
+	}
+	@Parameter(optional=true, description="The name of the input stream attribute with a comma separated list of the bcc "
+		 + "recipients. If this parameter is set, parameter `bcc` is not allowed.")
+	public void setBccAttribute(TupleAttribute<Tuple, String> bccAttribute) {
+		this.bccAttribute = bccAttribute;
+	}
+	@Parameter(optional=true, description="The subject of the message. The subject string of the message is concatenated "
+		+ "from the parameter components. If one component equals the name of an input string attribute, the attribute "
+		+ "value is taken instead. The default value is 'ALERT form Streams !'")
+	public void setSubject(String[] subject) {
+		this.subject = subject;
+	}
+	@Parameter(optional=true, description="Content of the message to send. The content string of the message is concatenated "
+		+ "from the parameter components. If one component equals the name of an input string attribute, the attribute "
+		+ "value is taken instead. The default is am empty line")
+	public void setContent(String[] content) {
+		this.content = content;
+	}
+	@Parameter(optional=true, description="If enabled, every sucessfully smtp opoeration triggers an debug level entry in "
+			+ "the operator log and every smtp failure triggers an error level entry in the operator log. Default is false.")
+	public void setEnableOperatorLog(boolean enableOperatorLog) {
+		this.enableOperatorLog = enableOperatorLog;
+	}
 
-        tracer.trace("Operator " + context.getName() + " initializing in PE: " + context.getPE().getPEId() + " in Job: " + context.getPE().getJobId() );
+	@CustomMetric(kind = Kind.COUNTER, description ="The number of failed e-mail transmissions.")
+	public void setnEmailFailures(Metric nEmailFailures) {
+		this.nEmailFailures = nEmailFailures;
+	}
 
-        //set port defaults
-        if (smtpPort == -1) {
-            switch (encryptionType) {
-            case NONE: smtpPort = 25;
-                break;
-            case STARTTLS: smtpPort = 25;
-                break;
-            case TLS: smtpPort = 587;
-                break;
-            }
-        }
-        //set props from params and log
-        String oname = "Operator " + context.getName() + " ";
-        
-        mailProperties.put("mail.smtp.from", from);
-        System.out.println(oname + "mail.smtp.from: " + from);
-        
-        mailProperties.put("mail.smtp.host", smtpHost);
-        System.out.println(oname + "smtpHost: " + smtpHost);
-        
-        mailProperties.put("mail.smtp.port", String.valueOf(smtpPort));
-        System.out.println(oname + "smtpPort: " + String.valueOf(smtpPort));
-        
-        if (username != null) {
-            mailProperties.put("mail.smtp.user", username);
-            System.out.println(oname + "username: " + username);
-        } else {
-            mailProperties.put("mail.smtp.user", from);
-            System.out.println(oname + "from: " + from);
-        }
-        
-        if (password != null) {
-             mailProperties.put("mail.smtp.auth", "true");
-             System.out.println(oname + "password: ******");
-        }
-        
-        switch (encryptionType) {
-        case NONE: break;
-        case STARTTLS:
-            mailProperties.put("mail.smtp.starttls.enable", "true");
-            System.out.println(oname + "mail.smtp.starttls.enable: true");
-            mailProperties.put("mail.smtp.starttls.required", "true");
-            System.out.println(oname + "mail.smtp.starttls.required: true");
-            break;
-        case TLS:
-            mailProperties.put("mail.smtp.socketFactory.port", String.valueOf(smtpPort));
-            mailProperties.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
-            mailProperties.put("mail.smtp.ssl.enable",true);
-            //mailProperties.put("mail.smtp.ssl.trust ","*");
-            System.out.println(oname + "mail.smtp.ssl.enable: true");
-            break;
-        }
-        
-        if (password == null) {
-            session = Session.getInstance(mailProperties);
-        } else {
-            session = Session.getInstance(mailProperties,
-                new Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(username, password);
-                    }
-                }
-            );
-        }
-    }
+	@ContextCheck(compile = true)
+	public static void checkMethodParams(OperatorContextChecker occ) {
+		occ.checkExcludedParameters("to", "toAttribute");
+		occ.checkExcludedParameters("cc", "ccAttribute");
+		occ.checkExcludedParameters("bcc", "bccAttribute");
+		Set<String> parameterNames = occ.getOperatorContext().getParameterNames();
+		if ( ! parameterNames.contains("to") && ! parameterNames.contains("toAttribute")) {
+			occ.setInvalidContext("One of parameter 'to' and 'toAttribute' is required", new Object[]{});
+		}
+	}
 
-    /**
-     * Process an incoming tuple that arrived on the specified port.
-     * @param stream Port the tuple is arriving on.
-     * @param tuple Object representing the incoming tuple.
-     * @throws MessagingException 
-     * @throws AddressException 
-     * @throws Exception Operator failure, will cause the enclosing PE to terminate.
-     */
-    @Override
-    public void process(StreamingInput<Tuple> stream, Tuple tuple) throws AddressException, MessagingException {
-        Message message=new MimeMessage(session);
-        //message.setFrom(new InternetAddress(username));
-        String toString = null;
-        if (to != null) {
-            toString = to;
-        } else {
-            toString = toAttribute.getValue(tuple);
-        }
-        String ccString = "";
-        if (cc != null) {
-            ccString =  cc;
-        } else if ( ccAttribute != null) {
-            ccString = ccAttribute.getValue(tuple);
-        }
-        String bccString = "";
-        if (bcc != null) {
-            bccString =  bcc;
-        } else if ( bccAttribute != null) {
-            bccString = bccAttribute.getValue(tuple);
-        }
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(toString));
-        message.setRecipients(Message.RecipientType.CC,  InternetAddress.parse(ccString));
-        message.setRecipients(Message.RecipientType.BCC,  InternetAddress.parse(bccString));
-        StringBuffer sb = new StringBuffer();
-        for(String s:subject){
-            if(tuple.getStreamSchema().getAttributeIndex(s) < 0){
-                 sb.append(s);
-            }else{
-                sb.append(tuple.getObject(s).toString());
-            }
-        }
-        message.setSubject(sb.toString());
-        sb = new StringBuffer();
-        for(String s:content){
-            if(tuple.getStreamSchema().getAttributeIndex(s) < 0){
-                sb.append(s);
-            }else{
-                sb.append(tuple.getObject(s).toString());
-            }
-        }
-        message.setText(sb.toString());
-        Transport transport = session.getTransport();
-        URLName un = transport.getURLName();
-        tracer.debug("send message URLname: " + un.toString());
-        Transport.send(message);
-    }
-    
+	/**
+	 * Initialize this operator. Called once before any tuples are processed.
+	 * @param context OperatorContext for this operator.
+	 * @throws Exception Operator failure, will cause the enclosing PE to terminate.
+	 */
+	@Override
+	public synchronized void initialize(OperatorContext context) throws Exception {
+		// Must call super.initialize(context) to correctly setup an operator.
+		super.initialize(context);
 
-    /**
-     * Shutdown this operator.
-     * @throws Exception Operator failure, will cause the enclosing PE to terminate.
-     */
-    @Override
-    public synchronized void shutdown() throws Exception {
-        OperatorContext context = getOperatorContext();
-       tracer.trace("Operator " + context.getName() + " shutting down in PE: " + context.getPE().getPEId() + " in Job: " + context.getPE().getJobId() );
-        // Must call super.shutdown()
-        super.shutdown();
-    }
+		tracer.trace("Operator " + context.getName() + " initializing in PE: " + context.getPE().getPEId() + " in Job: " + context.getPE().getJobId() );
+
+		//set port defaults
+		if (smtpPort == -1) {
+			switch (encryptionType) {
+			case NONE: smtpPort = 25;
+				break;
+			case STARTTLS: smtpPort = 587;
+				break;
+			case TLS: smtpPort = 465;
+				break;
+			}
+		}
+		//set props from params and log
+		String oname = "Operator " + context.getName() + " ";
+		System.out.println(oname + "Initialization values:");
+
+		mailProperties.put("mail.smtp.from", from);
+		System.out.println(oname + "mail.smtp.from: " + from);
+		
+		mailProperties.put("mail.smtp.host", smtpHost);
+		System.out.println(oname + "mail.smtp.host: " + smtpHost);
+		
+		mailProperties.put("mail.smtp.port", String.valueOf(smtpPort));
+		System.out.println(oname + "mail.smtp.port: " + String.valueOf(smtpPort));
+		
+		if (username == null) {
+			username = from;
+		}
+		mailProperties.put("mail.smtp.user", username);
+		System.out.println(oname + "mail.smtp.user: " + username);
+		
+		if (password != null) {
+			 mailProperties.put("mail.smtp.auth", "true");
+			 System.out.println(oname + "mail.smtp.auth: ******");
+		}
+		
+		switch (encryptionType) {
+		case NONE: break;
+		case STARTTLS:
+			mailProperties.put("mail.smtp.starttls.enable", "true");
+			System.out.println(oname + "mail.smtp.starttls.enable: true");
+			mailProperties.put("mail.smtp.starttls.required", "true");
+			mailProperties.put("mail.smtp.ssl.trust ","*");
+			System.out.println(oname + "mail.smtp.starttls.required: true");
+			break;
+		case TLS:
+			mailProperties.put("mail.smtp.socketFactory.port", String.valueOf(smtpPort));
+			mailProperties.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+			mailProperties.put("mail.smtp.ssl.enable",true);
+			//mailProperties.put("mail.smtp.ssl.trust ","*");
+			System.out.println(oname + "mail.smtp.ssl.enable: true");
+			break;
+		}
+		
+		if (password == null) {
+			session = Session.getInstance(mailProperties);
+		} else {
+			session = Session.getInstance(mailProperties,
+				new Authenticator() {
+					protected PasswordAuthentication getPasswordAuthentication() {
+						return new PasswordAuthentication(username, password);
+					}
+				}
+			);
+		}
+	}
+
+	/**
+	 * Process an incoming tuple that arrived on the specified port.
+	 * @param stream Port the tuple is arriving on.
+	 * @param tuple Object representing the incoming tuple.
+	 * @throws MessagingException 
+	 * @throws AddressException 
+	 * @throws Exception Operator failure, will cause the enclosing PE to terminate.
+	 */
+	@Override
+	public synchronized void process(StreamingInput<Tuple> stream, Tuple tuple) {
+		Message message=new MimeMessage(session);
+		String toString = null;
+		if (to != null) {
+			toString = to;
+		} else {
+			toString = toAttribute.getValue(tuple);
+		}
+		String ccString = "";
+		if (cc != null) {
+			ccString =  cc;
+		} else if ( ccAttribute != null) {
+			ccString = ccAttribute.getValue(tuple);
+		}
+		String bccString = "";
+		if (bcc != null) {
+			bccString =  bcc;
+		} else if ( bccAttribute != null) {
+			bccString = bccAttribute.getValue(tuple);
+		}
+		StringBuffer subjectbuff = new StringBuffer();
+		for(String s:subject){
+			if(tuple.getStreamSchema().getAttributeIndex(s) < 0){
+				subjectbuff.append(s);
+			}else{
+				subjectbuff.append(tuple.getObject(s).toString());
+			}
+		}
+		StringBuffer contentbuff = new StringBuffer();
+		for(String s:content){
+			if(tuple.getStreamSchema().getAttributeIndex(s) < 0){
+				contentbuff.append(s);
+			}else{
+				contentbuff.append(tuple.getObject(s).toString());
+			}
+		}
+		try {
+			message.setFrom(new InternetAddress(from));
+			message.setRecipients(Message.RecipientType.TO,  InternetAddress.parse(toString));
+			message.setRecipients(Message.RecipientType.CC,  InternetAddress.parse(ccString));
+			message.setRecipients(Message.RecipientType.BCC, InternetAddress.parse(bccString));
+			message.setSubject(subjectbuff.toString());
+			message.setText(contentbuff.toString());
+			Transport transport = session.getTransport();
+			URLName un = transport.getURLName();
+			tracer.debug("send message URLname: " + un.toString());
+			Transport.send(message);
+			if (enableOperatorLog)
+				logger.debug("Email subject: " + subjectbuff.toString() + " was sent to: " + toString);
+		} catch (AddressException e) {
+			tracer.error("Wrong e-mail address", e);
+			nEmailFailures.increment();
+			if (enableOperatorLog)
+				logger.error("Can not send Email (wrong address) smtp host: " + smtpHost + ":" + String.valueOf(smtpPort) + " subject: " + subjectbuff.toString() + " try sent to: " + toString);
+		} catch (MessagingException e) {
+			tracer.error("Can not send e-mail", e);
+			nEmailFailures.increment();
+			if (enableOperatorLog)
+				logger.error("Can not send Email smtp host: " + smtpHost + ":" + String.valueOf(smtpPort) + " subject: " + subjectbuff.toString() + " try sent to: " + toString);
+		}
+	}
+
+	/**
+	 * Shutdown this operator.
+	 * @throws Exception Operator failure, will cause the enclosing PE to terminate.
+	 */
+	@Override
+	public synchronized void shutdown() throws Exception {
+		OperatorContext context = getOperatorContext();
+		tracer.trace("Operator " + context.getName() + " shutting down in PE: " + context.getPE().getPEId() + " in Job: " + context.getPE().getJobId() );
+		// Must call super.shutdown()
+		super.shutdown();
+	}
 }
