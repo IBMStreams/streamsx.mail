@@ -13,7 +13,7 @@ use com.ibm.streamsx.mail::SendMail;
  * @param   from      Email address to use for SMTP MAIL command. This sets the envelope return address. This address should be a valid and active e-mail account
  * @param   to        Comma separated list of the to recipients
  */
-composite SendMailSample {
+public composite SendMailSample {
 	param
 		expression<rstring> $smtpHost :        getSubmissionTimeValue("smtpHost");
 		expression<int32>   $smtpPort : (int32)getSubmissionTimeValue("smtpPort");

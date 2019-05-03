@@ -105,15 +105,21 @@
 	<target name="spldoc-samples" depends="samples"
 		description="Generate the doc for all samples">
 		<echo message="All samples spldoc to: ${samples.doc.dir}"/>
+		<exec executable="bash" outputproperty="samples.list" failonerror="true">
+			<arg value="-c"/>
+			<arg value="for x in samples/*/info.xml; do echo -n ${x%/*};  echo -n : ; done"/>
+		</exec>
+		<echo message="All samples to SPLDOC: ${samples.list}"/>
 		<exec executable="${spl-md}" failonerror="true">
 			<arg value="--include-composite-operator-diagram"/>
 			<arg value="--author"/>
 			<arg value="${tkauthor}"/>
 			<arg value="--doc-title"/>
 			<arg value="${tktitle}"/>
-			<arg value="-t"/>
-			<arg value="${samples.dir}"/>
+			<arg value="--toolkit-path"/>
+			<arg value="${samples.list}"/>
 			<arg value="--warn-no-comments"/>
+			<arg value="--check-tags"/>
 			<arg value="--include-source"/>
 			<arg value="--output-directory"/>
 			<arg value="${samples.doc.dir}"/>
