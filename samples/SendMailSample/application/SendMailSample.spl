@@ -1,0 +1,45 @@
+namespace application;
+
+use com.ibm.streamsx.mail::SendMail;
+
+/**
+ * This sample demonstrates the use of the SendMail operator.
+ * This sample sends 3 e-mails with a variable content.
+ * Provide the parameters os an e-mail account and adapt the 
+ * encryption type if required.
+ * 
+ * @param   smtpHost  The SMTP relay host name/address
+ * @param   smtpPort  The SMTP host port
+ * @param   from      Email address to use for SMTP MAIL command. This sets the envelope return address. This address should be a valid and active e-mail account
+ * @param   to        Comma separated list of the to recipients
+ */
+composite SendMailSample {
+	param
+		expression<rstring> $smtpHost :        getSubmissionTimeValue("smtpHost");
+		expression<int32>   $smtpPort : (int32)getSubmissionTimeValue("smtpPort");
+		expression<rstring> $from :            getSubmissionTimeValue("from");
+		expression<rstring> $to :              getSubmissionTimeValue("to");
+		
+	graph
+		stream<uint64 count, rstring to> TriggerStreams as O = Beacon() {
+			param
+				iterations: 3;
+				period: 3.0;
+			output
+				O: count = IterationCount() + 1ul,
+					to = $to;
+		}
+		
+		() as MailSink = SendMail(TriggerStreams as I) {
+			param
+				//encryptionType: STARTTLS;
+				smtpHost: $smtpHost;
+				smtpPort: $smtpPort;
+				from: $from;
+				toAttribute: to;
+				content: "Mail from streams: number ", "count", " was sent.";
+		}
+
+	config
+		restartable: false;
+}
