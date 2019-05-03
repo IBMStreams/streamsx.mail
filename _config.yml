@@ -9,7 +9,7 @@
 locale                   : "en"
 title                    : &toolkit "streamsx.mail"
 title_separator          : "-"
-name                     : &name "IBM Streams" # &name is a YAML anchor which can be *referenced later
+name                     : &name "IBM Streams Team Berlin" # &name is a YAML anchor which can be *referenced later
 description              : &description "toolkit site description."
 url                      : https://ibmstreams.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "/streamsx.mail" # the subpath of your site, e.g. "/blog"
