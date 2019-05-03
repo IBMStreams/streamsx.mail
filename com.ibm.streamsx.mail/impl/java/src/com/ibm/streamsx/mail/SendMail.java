@@ -38,6 +38,7 @@ import com.ibm.streams.operator.model.InputPorts;
 import com.ibm.streams.operator.model.Libraries;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
+import com.ibm.streams.operator.state.ConsistentRegionContext;
 
 /**
  * Class for an operator that consumes tuples and does not produce an output stream. 
@@ -75,8 +76,17 @@ import com.ibm.streams.operator.model.PrimitiveOperator;
 )
 public class SendMail extends AbstractOperator {
 
-	public static final String DESCRIPTION = "Operator SendMail\\n"
-			+ "This operator sends out an e-mail, when a tuple arrives at the input port. The operator has no output port.";
+	public static final String DESCRIPTION = ""
+			+ "This operator sends out an e-mail, when a tuple arrives at the input port. The operator has no output port.\\n"
+			+ "This operator supports the following encryption methods:\\n"
+			+ "* NONE: no encryption\\n"
+			+ "* STARTTLS: The client sends the command STARTLS and the communication switches to TLS encryption. The server must support STARTTLS.\\n"
+			+ "* TLS: The client requires TLS connection to the server.\\n"
+			+ "The trust store may be changed with the appropriate System property like:\\n"
+			+ "    vmArg: ' -Djavax.net.ssl.trustStore=mykeystore'\\n\\n"
+			+ "The operatoy may send messages to the operator log if something wents wrong during smtp operation. See parmater `enableOperatorLog`. "
+			+ "The operator provides authentication to the smtp server if the parameter `password` is provided. Authentication method is LOGIN PLAIN DIGEST-MD5 NTLM "
+			+ "This operator should not be placed inside a consistent region.";
 
 	//register trace and log facility
 	protected static Logger logger = Logger.getLogger("com.ibm.streams.operator.log." + SendMail.class.getName());
@@ -105,6 +115,7 @@ public class SendMail extends AbstractOperator {
 	private String[] subject = {"ALERT form Streams !"};
 	private String[] content = {" "};
 	private boolean enableOperatorLog = false;
+	private boolean acceptAllCertificates = false;
 
 	private Metric nEmailFailures;
 
@@ -120,8 +131,8 @@ public class SendMail extends AbstractOperator {
 	public void setSmtpHost(String smtpHost) {
 		this.smtpHost = smtpHost;
 	}
-	@Parameter(optional=true, description="The SMTP host port. Defaults to 25 if `encryptionType` is `NONE` or `STARTTLS`; "
-		+ "defaults to 587 if `EncryptionType` is `TLS`")
+	@Parameter(optional=true, description="The SMTP host port. Defaults to 25 if `encryptionType` is `NONE`, 587 if `encryptionType` "
+		+ "is `STARTTLS` and 587 if `EncryptionType` is `TLS`")
 	public void setSmtpPort(int smtpPort) {
 		this.smtpPort = smtpPort;
 	}
@@ -195,10 +206,24 @@ public class SendMail extends AbstractOperator {
 	public void setEnableOperatorLog(boolean enableOperatorLog) {
 		this.enableOperatorLog = enableOperatorLog;
 	}
+	@Parameter(optional=true, description="Accept all SSL certificates, this means the server certificate is not checked. "
+			+ "Setting this option will allow potentially insecure connections. Default is false.")
+	public void setAcceptAllCertificates(boolean acceptAllCertificates) {
+		this.acceptAllCertificates = acceptAllCertificates;
+	}
 
 	@CustomMetric(kind = Kind.COUNTER, description ="The number of failed e-mail transmissions.")
 	public void setnEmailFailures(Metric nEmailFailures) {
 		this.nEmailFailures = nEmailFailures;
+	}
+
+	@ContextCheck(compile = true)
+	public static void checkInConsistentRegion(OperatorContextChecker checker) {
+		ConsistentRegionContext consistentRegionContext = checker.getOperatorContext().getOptionalContext(ConsistentRegionContext.class);
+		if(consistentRegionContext != null) {
+			//checker.setInvalidContext(Messages.getString("CONSISTENT_CHECK_2"), new String[] {OPER_NAME});
+			checker.setInvalidContext("The operator " + SendMail.class.getName() + " cannot be used inside a consistent region.", new Object[]{});
+		}
 	}
 
 	@ContextCheck(compile = true)
@@ -255,8 +280,8 @@ public class SendMail extends AbstractOperator {
 		System.out.println(oname + "mail.smtp.user: " + username);
 		
 		if (password != null) {
-			 mailProperties.put("mail.smtp.auth", "true");
-			 System.out.println(oname + "mail.smtp.auth: ******");
+			mailProperties.put("mail.smtp.auth", "true");
+			System.out.println(oname + "mail.smtp.auth: ******");
 		}
 		
 		switch (encryptionType) {
@@ -265,15 +290,30 @@ public class SendMail extends AbstractOperator {
 			mailProperties.put("mail.smtp.starttls.enable", "true");
 			System.out.println(oname + "mail.smtp.starttls.enable: true");
 			mailProperties.put("mail.smtp.starttls.required", "true");
-			mailProperties.put("mail.smtp.ssl.trust ","*");
 			System.out.println(oname + "mail.smtp.starttls.required: true");
+			//mailProperties.put("mail.smtp.ssl.trust ","*");
+			if (acceptAllCertificates) {
+				mailProperties.put("mail.smtp.ssl.socketFactory.class", "com.ibm.streamsx.mail.DummySSLSocketFactory");
+				//mailProperties.put("mail.smtp.ssl.socketFactory", com.ibm.streamsx.mail.DummySSLSocketFactory.class);
+				mailProperties.put("mail.smtp.ssl.socketFactory.fallback", "false");
+				System.out.println(oname + "mail.smtp.ssl.socketFactory.class: com.ibm.streamsx.mail.DummySSLSocketFactory");
+				System.out.println(oname + "mail.smtp.ssl.socketFactory.fallback: false");
+			}
 			break;
 		case TLS:
 			mailProperties.put("mail.smtp.socketFactory.port", String.valueOf(smtpPort));
-			mailProperties.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
+			System.out.println(oname + "mail.smtp.socketFactory.port: " + String.valueOf(smtpPort));
+			//mailProperties.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
 			mailProperties.put("mail.smtp.ssl.enable",true);
-			//mailProperties.put("mail.smtp.ssl.trust ","*");
 			System.out.println(oname + "mail.smtp.ssl.enable: true");
+			//mailProperties.put("mail.smtp.ssl.trust ","*");
+			if (acceptAllCertificates) {
+				mailProperties.put("mail.smtp.ssl.socketFactory.class", "com.ibm.streamsx.mail.DummySSLSocketFactory");
+				//mailProperties.put("mail.smtp.ssl.socketFactory", com.ibm.streamsx.mail.DummySSLSocketFactory().class);
+				mailProperties.put("mail.smtp.ssl.socketFactory.fallback", "false");
+				System.out.println(oname + "mail.smtp.ssl.socketFactory.class: com.ibm.streamsx.mail.DummySSLSocketFactory");
+				System.out.println(oname + "mail.smtp.ssl.socketFactory.fallback: false");
+			}
 			break;
 		}
 		
