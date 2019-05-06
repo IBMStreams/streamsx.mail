@@ -22,7 +22,7 @@
 <div class="body refbody">
 <div class="section">
 <p class="p">
-<a class="xref" href="../toolkits/toolkits.html">IBMStreams streamsx.mail Toolkit</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.mail.html">com.ibm.streamsx.mail 2.0.0.__dev__</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.mail.html">com.ibm.streamsx.mail</a> &gt; SendMail</p>
+<a class="xref" href="../toolkits/toolkits.html">IBMStreams com.ibm.streamsx.mail Toolkit</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.mail.html">com.ibm.streamsx.mail 1.0.1</a> &gt; <a class="xref" href="ns$com.ibm.streamsx.mail.html">com.ibm.streamsx.mail</a> &gt; SendMail</p>
 
 </div>
 
@@ -32,24 +32,7 @@
 
 <div class="section">
 
-<div class="p">This operator sends out an e-mail, when a tuple arrives at the input port. The operator has no output port. This operator supports the following encryption methods:
-<ul class="ul">
-<li class="li"> NONE: no encryption</li>
-
-<li class="li"> STARTTLS: The client sends the command STARTLS and the communication switches to TLS encryption. The server must support STARTTLS.</li>
-
-<li class="li"> TLS: The client requires TLS connection to the server.</li>
-
-</ul>
-The trust store may be changed with the appropriate System property like:
-<pre class="pre codeblock">
-vmArg: ' -Djavax.net.ssl.trustStore=mykeystore'
-</pre>
-
-
-</div>
-
-<p class="p">The operatoy may send messages to the operator log if something wents wrong during smtp operation. See parmater <tt class="ph tt">enableOperatorLog</tt>. The operator provides authentication to the smtp server if the parameter <tt class="ph tt">password</tt> is provided. Authentication method is LOGIN PLAIN DIGEST-MD5 NTLM This operator should not be placed inside a consistent region.
+<p class="p">Java Operator SendMail
 </p>
 
 </div>
@@ -60,7 +43,7 @@ vmArg: ' -Djavax.net.ssl.trustStore=mykeystore'
  
   <dt class="dt dlterm">Ports</dt>
 
-  <dd class="dd">This operator has 1 input port and 0 output ports.</dd>
+  <dd class="dd">This operator has 1 or more input ports and 0 output ports.</dd>
 
  
  
@@ -72,14 +55,14 @@ vmArg: ' -Djavax.net.ssl.trustStore=mykeystore'
  
   <dt class="dt dlterm">Parameters</dt>
 
-  <dd class="dd">This operator supports 16 parameters.
+  <dd class="dd">This operator supports 11 parameters.
 <p class="p"> Required: 
-<a class="xref" href="#spldoc_operator__parameter__from">from</a>, <a class="xref" href="#spldoc_operator__parameter__smtpHost">smtpHost</a>
+<a class="xref" href="#spldoc_operator__parameter__authentication">authentication</a>, <a class="xref" href="#spldoc_operator__parameter__content">content</a>, <a class="xref" href="#spldoc_operator__parameter__hostname">hostname</a>, <a class="xref" href="#spldoc_operator__parameter__hostport">hostport</a>, <a class="xref" href="#spldoc_operator__parameter__password">password</a>, <a class="xref" href="#spldoc_operator__parameter__subject">subject</a>, <a class="xref" href="#spldoc_operator__parameter__to">to</a>, <a class="xref" href="#spldoc_operator__parameter__username">username</a>
 
 </p>
 
 <p class="p"> Optional: 
-<a class="xref" href="#spldoc_operator__parameter__acceptAllCertificates">acceptAllCertificates</a>, <a class="xref" href="#spldoc_operator__parameter__bcc">bcc</a>, <a class="xref" href="#spldoc_operator__parameter__bccAttribute">bccAttribute</a>, <a class="xref" href="#spldoc_operator__parameter__cc">cc</a>, <a class="xref" href="#spldoc_operator__parameter__ccAttribute">ccAttribute</a>, <a class="xref" href="#spldoc_operator__parameter__content">content</a>, <a class="xref" href="#spldoc_operator__parameter__enableOperatorLog">enableOperatorLog</a>, <a class="xref" href="#spldoc_operator__parameter__encryptionType">encryptionType</a>, <a class="xref" href="#spldoc_operator__parameter__password">password</a>, <a class="xref" href="#spldoc_operator__parameter__smtpPort">smtpPort</a>, <a class="xref" href="#spldoc_operator__parameter__subject">subject</a>, <a class="xref" href="#spldoc_operator__parameter__to">to</a>, <a class="xref" href="#spldoc_operator__parameter__toAttribute">toAttribute</a>, <a class="xref" href="#spldoc_operator__parameter__username">username</a>
+<a class="xref" href="#spldoc_operator__parameter__batch">batch</a>, <a class="xref" href="#spldoc_operator__parameter__bcc">bcc</a>, <a class="xref" href="#spldoc_operator__parameter__cc">cc</a>
 
 </p>
 </dd>
@@ -88,7 +71,7 @@ vmArg: ' -Djavax.net.ssl.trustStore=mykeystore'
  
   <dt class="dt dlterm">Metrics</dt>
 
-  <dd class="dd">This operator reports 1 metric.</dd>
+  <dd class="dd">This operator does not report any metrics.</dd>
 
  
 </dl>
@@ -115,7 +98,7 @@ vmArg: ' -Djavax.net.ssl.trustStore=mykeystore'
 
    <dd class="dd">
 
-<p class="p">Every tuple received from this port triggers an outgoing e-mail. The attributes if the input stream may be used as parameters and content for the e-mail to sent. These attributes are configured through the parameters <tt class="ph tt">toAttribute</tt>, <tt class="ph tt">ccAttribute</tt>, <tt class="ph tt">bccAttribute</tt>, <tt class="ph tt">subject</tt> and <tt class="ph tt">content</tt>.
+<p class="p">Port that ingests tuples
 </p>
    </dd>
 
@@ -145,282 +128,60 @@ vmArg: ' -Djavax.net.ssl.trustStore=mykeystore'
       </dd>
 
     
+  
+   <dt class="dt dlterm">Ports (1...)</dt>
+
+    <dd class="dd">
+
+<p class="p">Optional input ports
+</p>
+   <dl class="dl">
+    
+      <dt class="dt dlterm">Properties</dt>
+
+      <dd class="dd">
+   <ul class="sl simple">
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set__controlport">ControlPort</a>: false
+</li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set__windowingmode">WindowingMode</a>: NonWindowed
+</li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__input_port_set__windowpunctuationinputmode">WindowPunctuationInputMode</a>: Oblivious
+</li>
+
+   </ul>
+
+      </dd>
+
+    
+   </dl>
+
+  </dd>
+
+
 </dl>
 
 </div>
 
 <div class="section">
 <p class="p splhead-1"><strong class="ph b"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters">Parameters</a></strong></p>
-This operator supports 16 parameters.
+This operator supports 11 parameters.
 <p class="p"> Required: 
-<a class="xref" href="#spldoc_operator__parameter__from">from</a>, <a class="xref" href="#spldoc_operator__parameter__smtpHost">smtpHost</a>
+<a class="xref" href="#spldoc_operator__parameter__authentication">authentication</a>, <a class="xref" href="#spldoc_operator__parameter__content">content</a>, <a class="xref" href="#spldoc_operator__parameter__hostname">hostname</a>, <a class="xref" href="#spldoc_operator__parameter__hostport">hostport</a>, <a class="xref" href="#spldoc_operator__parameter__password">password</a>, <a class="xref" href="#spldoc_operator__parameter__subject">subject</a>, <a class="xref" href="#spldoc_operator__parameter__to">to</a>, <a class="xref" href="#spldoc_operator__parameter__username">username</a>
 
 </p>
 
 <p class="p"> Optional: 
-<a class="xref" href="#spldoc_operator__parameter__acceptAllCertificates">acceptAllCertificates</a>, <a class="xref" href="#spldoc_operator__parameter__bcc">bcc</a>, <a class="xref" href="#spldoc_operator__parameter__bccAttribute">bccAttribute</a>, <a class="xref" href="#spldoc_operator__parameter__cc">cc</a>, <a class="xref" href="#spldoc_operator__parameter__ccAttribute">ccAttribute</a>, <a class="xref" href="#spldoc_operator__parameter__content">content</a>, <a class="xref" href="#spldoc_operator__parameter__enableOperatorLog">enableOperatorLog</a>, <a class="xref" href="#spldoc_operator__parameter__encryptionType">encryptionType</a>, <a class="xref" href="#spldoc_operator__parameter__password">password</a>, <a class="xref" href="#spldoc_operator__parameter__smtpPort">smtpPort</a>, <a class="xref" href="#spldoc_operator__parameter__subject">subject</a>, <a class="xref" href="#spldoc_operator__parameter__to">to</a>, <a class="xref" href="#spldoc_operator__parameter__toAttribute">toAttribute</a>, <a class="xref" href="#spldoc_operator__parameter__username">username</a>
+<a class="xref" href="#spldoc_operator__parameter__batch">batch</a>, <a class="xref" href="#spldoc_operator__parameter__bcc">bcc</a>, <a class="xref" href="#spldoc_operator__parameter__cc">cc</a>
 
 </p>
 <dl class="dl">
 
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__acceptAllCertificates"><!-- --></a><tt class="ph tt">acceptAllCertificates</tt></dt>
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__authentication"><!-- --></a><tt class="ph tt">authentication</tt></dt>
 
 <dd class="dd">
-<p class="p">Accept all SSL certificates, this means the server certificate is not checked. Setting this option will allow potentially insecure connections. Default is false.
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: boolean
-  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__bcc"><!-- --></a><tt class="ph tt">bcc</tt></dt>
-
-<dd class="dd">
-<p class="p">Comma separated list of the bcc recipients. If this parameter is set, parameter <tt class="ph tt">bccAttribute</tt> is not allowed.
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
-  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__bccAttribute"><!-- --></a><tt class="ph tt">bccAttribute</tt></dt>
-
-<dd class="dd">
-<p class="p">The name of the input stream attribute with a comma separated list of the bcc recipients. If this parameter is set, parameter <tt class="ph tt">bcc</tt> is not allowed.
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
-  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__expressionmode">ExpressionMode</a>: Attribute
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__cc"><!-- --></a><tt class="ph tt">cc</tt></dt>
-
-<dd class="dd">
-<p class="p">Comma separated list of the cc recipients. If this parameter is set, parameter <tt class="ph tt">ccAttribute</tt> is not allowed.
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
-  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__ccAttribute"><!-- --></a><tt class="ph tt">ccAttribute</tt></dt>
-
-<dd class="dd">
-<p class="p">The name of the input stream attribute with a comma separated list of the cc recipients. If this parameter is set, parameter <tt class="ph tt">cc</tt> is not allowed.
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
-  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__expressionmode">ExpressionMode</a>: Attribute
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__content"><!-- --></a><tt class="ph tt">content</tt></dt>
-
-<dd class="dd">
-<p class="p">Content of the message to send. The content string of the message is concatenated from the parameter components. If one component equals the name of an input string attribute, the attribute value is taken instead. The default is am empty line
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
-  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__enableOperatorLog"><!-- --></a><tt class="ph tt">enableOperatorLog</tt></dt>
-
-<dd class="dd">
-<p class="p">If enabled, every sucessfully smtp opoeration triggers an debug level entry in the operator log and every smtp failure triggers an error level entry in the operator log. Default is false.
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: boolean
-  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__encryptionType"><!-- --></a><tt class="ph tt">encryptionType</tt></dt>
-
-<dd class="dd">
-<p class="p">Encryption method to be used for the SMTP connection. Default is NONE
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: com.ibm.streamsx.mail.SendMail.EncryptionType
- (<tt class="ph tt">NONE, STARTTLS, TLS</tt>)  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__expressionmode">ExpressionMode</a>: CustomLiteral
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__from"><!-- --></a><tt class="ph tt">from</tt></dt>
-
-<dd class="dd">
-<p class="p">Email address to use for SMTP MAIL command. This sets the envelope return address. This address should be a valid and active e-mail account.
+<p class="p">Authentication method to use : NONE, TLS, SSL
 </p>
 <dl class="dl">
 
@@ -448,72 +209,10 @@ This operator supports 16 parameters.
 
 
 
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__password"><!-- --></a><tt class="ph tt">password</tt></dt>
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__batch"><!-- --></a><tt class="ph tt">batch</tt></dt>
 
 <dd class="dd">
-<p class="p">The password for the SMTP account
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
-  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__smtpHost"><!-- --></a><tt class="ph tt">smtpHost</tt></dt>
-
-<dd class="dd">
-<p class="p">The SMTP relay host name/address.
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
-  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: false
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__smtpPort"><!-- --></a><tt class="ph tt">smtpPort</tt></dt>
-
-<dd class="dd">
-<p class="p">The SMTP host port. Defaults to 25 if <tt class="ph tt">encryptionType</tt> is <tt class="ph tt">NONE</tt>, 587 if <tt class="ph tt">encryptionType</tt> is <tt class="ph tt">STARTTLS</tt> and 587 if <tt class="ph tt">EncryptionType</tt> is <tt class="ph tt">TLS</tt>
+<p class="p">number of messages to wait before sending
 </p>
 <dl class="dl">
 
@@ -541,10 +240,10 @@ This operator supports 16 parameters.
 
 
 
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__subject"><!-- --></a><tt class="ph tt">subject</tt></dt>
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__bcc"><!-- --></a><tt class="ph tt">bcc</tt></dt>
 
 <dd class="dd">
-<p class="p">The subject of the message. The subject string of the message is concatenated from the parameter components. If one component equals the name of an input string attribute, the attribute value is taken instead. The default value is 'ALERT form Streams !'
+<p class="p">list of the bcc recipients
 </p>
 <dl class="dl">
 
@@ -555,7 +254,190 @@ This operator supports 16 parameters.
   <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
   </li>
 
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
      <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__cc"><!-- --></a><tt class="ph tt">cc</tt></dt>
+
+<dd class="dd">
+<p class="p">list of the cc recipients
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__content"><!-- --></a><tt class="ph tt">content</tt></dt>
+
+<dd class="dd">
+<p class="p">Content of the message to send
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: false
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__hostname"><!-- --></a><tt class="ph tt">hostname</tt></dt>
+
+<dd class="dd">
+<p class="p">SMTP host name
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: false
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__hostport"><!-- --></a><tt class="ph tt">hostport</tt></dt>
+
+<dd class="dd">
+<p class="p">SMTP host port
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: int32
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: false
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__password"><!-- --></a><tt class="ph tt">password</tt></dt>
+
+<dd class="dd">
+<p class="p">password 
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
+     </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: false
+     </li>
+
+  </ul>
+
+ </dd>
+
+
+</dl>
+
+</dd>
+
+
+
+<dt class="dt dlterm"><a name="spldoc_operator__parameter__subject"><!-- --></a><tt class="ph tt">subject</tt></dt>
+
+<dd class="dd">
+<p class="p">The subject
+</p>
+<dl class="dl">
+
+ <dt class="dt dlterm">Properties </dt>
+
+ <dd class="dd">
+  <ul class="sl simple">
+  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
+  </li>
+
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: false
      </li>
 
   </ul>
@@ -572,7 +454,7 @@ This operator supports 16 parameters.
 <dt class="dt dlterm"><a name="spldoc_operator__parameter__to"><!-- --></a><tt class="ph tt">to</tt></dt>
 
 <dd class="dd">
-<p class="p">Comma separated list of the to recipients. If this parameter is set, parameter toAttribute is not allowed. One of <tt class="ph tt">to</tt> and <tt class="ph tt">toAttribute</tt> is required.
+<p class="p">list of the to recipients
 </p>
 <dl class="dl">
 
@@ -586,41 +468,7 @@ This operator supports 16 parameters.
      <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
      </li>
 
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-  </ul>
-
- </dd>
-
-
-</dl>
-
-</dd>
-
-
-
-<dt class="dt dlterm"><a name="spldoc_operator__parameter__toAttribute"><!-- --></a><tt class="ph tt">toAttribute</tt></dt>
-
-<dd class="dd">
-<p class="p">The name of the input stream attribute with a comma separated list of the to recipients. If this parameter is set, parameter <tt class="ph tt">to</tt> is not allowed. One of <tt class="ph tt">to</tt> and <tt class="ph tt">toAttribute</tt> is required.
-</p>
-<dl class="dl">
-
- <dt class="dt dlterm">Properties </dt>
-
- <dd class="dd">
-  <ul class="sl simple">
-  <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__type">Type</a>: rstring
-  </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
-     </li>
-
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__expressionmode">ExpressionMode</a>: Attribute
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: false
      </li>
 
   </ul>
@@ -637,7 +485,7 @@ This operator supports 16 parameters.
 <dt class="dt dlterm"><a name="spldoc_operator__parameter__username"><!-- --></a><tt class="ph tt">username</tt></dt>
 
 <dd class="dd">
-<p class="p">The user name for SMTP. This parameter is required if the SMTP server requires authorization. The default is the value of parameter from.
+<p class="p">username for the connection
 </p>
 <dl class="dl">
 
@@ -651,7 +499,7 @@ This operator supports 16 parameters.
      <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__cardinality">Cardinality</a>: 1
      </li>
 
-     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: true
+     <li class="sli"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__parameters__parameter__optional">Optional</a>: false
      </li>
 
   </ul>
@@ -669,26 +517,6 @@ This operator supports 16 parameters.
 </div>
 
 <div class="section">
-<p class="p splhead-1"><strong class="ph b"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__context__metrics">Metrics</a></strong></p>
-<dl class="dl">
-  
-    <dt class="dt dlterm"><tt class="ph tt">nEmailFailures</tt> - <a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__context__metrics_kind_counter">Counter</a></dt>
-
-    <dd class="dd">
-
-<p class="p">The number of failed e-mail transmissions.
-</p>
-
-     <p class="p"/>
-
-     </dd>
-
-  
-</dl>
-
-</div>
-
-<div class="section">
 <p class="p splhead-1"><strong class="ph b"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__context__dependencies">Libraries</a></strong></p>
 
  <dl class="dl">
@@ -698,7 +526,7 @@ This operator supports 16 parameters.
 
   <dd class="dd"/>
 
-  <dd class="dd"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__context__dependencies__managedlibrary__libpath">Library Path</a>: <tt class="ph tt">../../impl/lib/com.ibm.streamsx.mail.jar, ../../lib/*</tt></dd>
+  <dd class="dd"><a class="xref" href="../references/OperatorModel.html#spldoc_reference_operator_model__context__dependencies__managedlibrary__libpath">Library Path</a>: <tt class="ph tt">../../impl/lib/com.ibm.streamsx.mail.jar, ../../opt/downloaded/*</tt></dd>
 
  
  </dl>
