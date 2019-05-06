@@ -114,7 +114,7 @@ public class SendMail extends AbstractOperator {
 	private TupleAttribute<Tuple, String> bccAttribute = null;
 	private String[] subject = {"ALERT form Streams !"};
 	private String[] content = {" "};
-	private boolean enableOperatorLog = false;
+	private boolean enableOperatorLog = true;
 	private boolean acceptAllCertificates = false;
 
 	private Metric nEmailFailures;
@@ -202,7 +202,7 @@ public class SendMail extends AbstractOperator {
 		this.content = content;
 	}
 	@Parameter(optional=true, description="If enabled, every sucessfully smtp opoeration triggers an debug level entry in "
-			+ "the operator log and every smtp failure triggers an error level entry in the operator log. Default is false.")
+			+ "the operator log and every smtp failure triggers an error level entry in the operator log. Default is true.")
 	public void setEnableOperatorLog(boolean enableOperatorLog) {
 		this.enableOperatorLog = enableOperatorLog;
 	}
@@ -221,8 +221,7 @@ public class SendMail extends AbstractOperator {
 	public static void checkInConsistentRegion(OperatorContextChecker checker) {
 		ConsistentRegionContext consistentRegionContext = checker.getOperatorContext().getOptionalContext(ConsistentRegionContext.class);
 		if(consistentRegionContext != null) {
-			//checker.setInvalidContext(Messages.getString("CONSISTENT_CHECK_2"), new String[] {OPER_NAME});
-			checker.setInvalidContext("The operator " + SendMail.class.getName() + " cannot be used inside a consistent region.", new Object[]{});
+			checker.setInvalidContext(Messages.getString("CONSISTENT_CHECK_1"), new String[] {SendMail.class.getName()});
 		}
 	}
 
@@ -233,7 +232,7 @@ public class SendMail extends AbstractOperator {
 		occ.checkExcludedParameters("bcc", "bccAttribute");
 		Set<String> parameterNames = occ.getOperatorContext().getParameterNames();
 		if ( ! parameterNames.contains("to") && ! parameterNames.contains("toAttribute")) {
-			occ.setInvalidContext("One of parameter 'to' and 'toAttribute' is required", new Object[]{});
+			occ.setInvalidContext(Messages.getString("PARAM_CHECK_1"), new Object[]{"to", "toAttribute"});
 		}
 	}
 
@@ -384,20 +383,22 @@ public class SendMail extends AbstractOperator {
 			message.setText(contentbuff.toString());
 			Transport transport = session.getTransport();
 			URLName un = transport.getURLName();
-			tracer.debug("send message URLname: " + un.toString());
+			if (tracer.isDebugEnabled())
+				tracer.debug("send message URLname: " + un.toString());
 			Transport.send(message);
 			if (enableOperatorLog)
-				logger.debug("Email subject: " + subjectbuff.toString() + " was sent to: " + toString);
+				if (logger.isDebugEnabled())
+					logger.debug(Messages.getString("LOG_INFO_MAIL_SEND", new Object[]{toString, subjectbuff.toString()}));
 		} catch (AddressException e) {
+			nEmailFailures.increment();
 			tracer.error("Wrong e-mail address", e);
-			nEmailFailures.increment();
 			if (enableOperatorLog)
-				logger.error("Can not send Email (wrong address) smtp host: " + smtpHost + ":" + String.valueOf(smtpPort) + " subject: " + subjectbuff.toString() + " try sent to: " + toString);
+				logger.error(Messages.getString("LOG_ERROR_WRONG_ADDRESS", new Object[]{smtpHost, smtpPort, toString}));
 		} catch (MessagingException e) {
-			tracer.error("Can not send e-mail", e);
 			nEmailFailures.increment();
+			tracer.error("Can not send e-mail", e);
 			if (enableOperatorLog)
-				logger.error("Can not send Email smtp host: " + smtpHost + ":" + String.valueOf(smtpPort) + " subject: " + subjectbuff.toString() + " try sent to: " + toString);
+				logger.error(Messages.getString("LOG_ERROR_CAN_NOT_SEND", new Object[]{smtpHost, smtpPort, toString}));
 		}
 	}
 

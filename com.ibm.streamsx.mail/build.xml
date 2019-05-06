@@ -83,7 +83,10 @@
 
 	<target name="jar" depends="compile">
 		<echo>Build jar from ${build.dir}</echo>
-		<jar destfile="${impl.lib.dir}/com.ibm.streamsx.mail.jar" basedir="${build.dir}" includes="com/ibm/streamsx/mail/**" filesonly="true"/>
+		<jar destfile="${impl.lib.dir}/com.ibm.streamsx.mail.jar" filesonly="true">
+			<fileset dir="${build.dir}" includes="com/ibm/streamsx/mail/**"/>
+			<fileset dir="${src.dir}" includes="com/ibm/streamsx/mail/*.properties"/>
+		</jar>
 	</target>
 
 	<!-- Downloads libraries using maven -->
