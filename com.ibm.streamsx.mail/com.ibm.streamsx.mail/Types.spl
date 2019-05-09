@@ -4,4 +4,15 @@
 // *******************************************************************************
 
 namespace com.ibm.streamsx.mail;
-type MAIL=rstring to,rstring replyto,rstring from,int64 date, rstring subject,rstring content;
+
+/**
+ * Output schema of the ReadMail operator
+ *  * to - the list of the e-mail recipients
+ *  * replyto - the envelop return address of the e-mail
+ *  * from - from address
+ *  * date - date string
+ *  * subject - subject
+ *  * contentType - content type
+ *  * content - content
+ */
+type Mail = rstring to, rstring replyto, rstring from, int64 date, rstring subject, list<rstring> contentType, list<rstring> content;

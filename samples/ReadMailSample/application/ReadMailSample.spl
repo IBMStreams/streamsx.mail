@@ -1,0 +1,33 @@
+namespace application;
+
+use com.ibm.streamsx.mail::*;
+
+composite ReadMailSample {
+	graph
+		stream<Mail> MailStream = ReadMail() {
+			param
+				imapHost: "mail.snafu.de";
+				
+				username: "joergboe@snafu.de";
+				password: "Berg3Bau";
+				iterations: 2l;
+				period: 20.0;
+				//readNewMailsOnly: true;
+				//deleteAfterRead: true;
+		}
+		
+		() as Sink = Custom(MailStream as I) {
+			logic
+				onTuple I : {
+					timestamp tim = createTimestamp(I.date, 0u);
+					rstring tt = ctime(tim);
+					printStringLn(I.subject + "::" + tt);
+					println(I);
+				}
+				onPunct I : println(currentPunct());
+		}
+
+	config
+		restartable: false;
+
+}

@@ -120,8 +120,8 @@ public class SendMail extends AbstractOperator {
 	private Metric nEmailFailures;
 
 	//other operator state values
-	protected Properties mailProperties = new Properties();
-	protected Session session;
+	private Properties mailProperties = new Properties();
+	private Session session;
 
 	@Parameter(optional=true, description="Encryption method to be used for the SMTP connection. Default is NONE")
 	public void setEncryptionType(EncryptionType encryptionType) {
@@ -280,7 +280,7 @@ public class SendMail extends AbstractOperator {
 		
 		if (password != null) {
 			mailProperties.put("mail.smtp.auth", "true");
-			System.out.println(oname + "mail.smtp.auth: ******");
+			System.out.println(oname + "mail.smtp.auth: true");
 		}
 		
 		switch (encryptionType) {
@@ -302,7 +302,6 @@ public class SendMail extends AbstractOperator {
 		case TLS:
 			mailProperties.put("mail.smtp.socketFactory.port", String.valueOf(smtpPort));
 			System.out.println(oname + "mail.smtp.socketFactory.port: " + String.valueOf(smtpPort));
-			//mailProperties.put("mail.smtp.socketFactory.class","javax.net.ssl.SSLSocketFactory");
 			mailProperties.put("mail.smtp.ssl.enable",true);
 			System.out.println(oname + "mail.smtp.ssl.enable: true");
 			//mailProperties.put("mail.smtp.ssl.trust ","*");
@@ -315,6 +314,7 @@ public class SendMail extends AbstractOperator {
 			}
 			break;
 		}
+		System.out.println("mailProperties: " + mailProperties.toString());
 		
 		if (password == null) {
 			session = Session.getInstance(mailProperties);
