@@ -2,14 +2,32 @@ namespace application;
 
 use com.ibm.streamsx.mail::*;
 
-composite ReadMailSample {
+/**
+ * This sample demonstrates the use of the ReadMail operator.
+ * This sample connects to an imap server and receives all e-mails in folder 'INBOX'.
+ * The operator performs 2 scan cycles.
+ * Provide the parameters for an e-mail account and adapt the 
+ * encryption type if required.
+ * 
+ * @param   imapHost  The imap server name/address
+ * @param   imapPort  The SMTP host port
+ * @param   username  e-mail account username
+ * @param   password  e-mail account password
+ */
+public composite ReadMailSample {
+	param
+		expression<rstring> $imapHost :        getSubmissionTimeValue("imapHost");
+		expression<int32>   $imapPort : (int32)getSubmissionTimeValue("imapPort", "993");
+		expression<rstring> $username :        getSubmissionTimeValue("username");
+		expression<rstring> $password :        getSubmissionTimeValue("password");
+
 	graph
 		stream<Mail> MailStream = ReadMail() {
 			param
-				imapHost: "mail.snafu.de";
-				
-				username: "joergboe@snafu.de";
-				password: "Berg3Bau";
+				imapHost: $imapHost;
+				imapPort: $imapPort;
+				username: $username;
+				password: $password;
 				iterations: 2l;
 				period: 20.0;
 				//readNewMailsOnly: true;
@@ -20,9 +38,10 @@ composite ReadMailSample {
 			logic
 				onTuple I : {
 					timestamp tim = createTimestamp(I.date, 0u);
-					rstring tt = ctime(tim);
-					printStringLn(I.subject + "::" + tt);
+					rstring timeString = ctime(tim);
+					printStringLn(timeString + "::" + I.subject);
 					println(I);
+					printStringLn("*****************************************************");
 				}
 				onPunct I : println(currentPunct());
 		}

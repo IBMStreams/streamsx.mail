@@ -12,7 +12,7 @@ namespace com.ibm.streamsx.mail;
  *  * from - from address
  *  * date - date string
  *  * subject - subject
- *  * contentType - content type
- *  * content - content
+ *  * contentType - list of content types of the message parts
+ *  * content - list of content
  */
 type Mail = rstring to, rstring replyto, rstring from, int64 date, rstring subject, list<rstring> contentType, list<rstring> content;

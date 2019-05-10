@@ -80,7 +80,7 @@ public class SendMail extends AbstractOperator {
 			+ "This operator sends out an e-mail, when a tuple arrives at the input port. The operator has no output port.\\n"
 			+ "This operator supports the following encryption methods:\\n"
 			+ "* NONE: no encryption\\n"
-			+ "* STARTTLS: The client sends the command STARTLS and the communication switches to TLS encryption. The server must support STARTTLS.\\n"
+			+ "* STARTTLS: The client sends the command STARTLS and the communication switches to TLS encryption. The operator requires the STARTTLS method and the server must support it.\\n"
 			+ "* TLS: The client requires TLS connection to the server.\\n"
 			+ "The trust store may be changed with the appropriate System property like:\\n"
 			+ "    vmArg: ' -Djavax.net.ssl.trustStore=mykeystore'\\n\\n"

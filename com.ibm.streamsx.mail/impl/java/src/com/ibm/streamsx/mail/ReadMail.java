@@ -28,6 +28,8 @@ import com.ibm.streams.operator.AbstractOperator;
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamSchema;
+import com.ibm.streams.operator.StreamingData;
+import com.ibm.streams.operator.StreamingData.Punctuation;
 import com.ibm.streams.operator.compile.OperatorContextChecker;
 import com.ibm.streams.operator.metrics.Metric;
 import com.ibm.streams.operator.metrics.Metric.Kind;
@@ -48,7 +50,9 @@ import com.ibm.streams.operator.model.PrimitiveOperator;
 @OutputPorts(
 		{
 			@OutputPortSet(
-					description="Port that produces tuples",
+					description="Port that produces tuples for each received e-mail. The schema must be of type [com.ibm.streamsx.mail::Mail|com.ibm.streamsx.mail::Mail] "
+							+ "Every message part of type `text/plain` and `text/HTML` is converted to an `rstring` element of the attribute `content`."
+							+ "Multipart messages are supported.",
 					cardinality=1,
 					optional=false,
 					windowPunctuationOutputMode=WindowPunctuationOutputMode.Generating
@@ -58,7 +62,17 @@ import com.ibm.streams.operator.model.PrimitiveOperator;
 public class ReadMail extends AbstractOperator {
 	
 	public static final String DESCRIPTION=""
-			+ "The ReadMail operator reads e-mails from an e-mail system and ingests tuples for each received e-mail.";
+			+ "The ReadMail operator reads e-mails from an imap server and ingests one tuple for each received e-mail."
+			+ "This operator supports the following encryption methods:\\n"
+			+ "* NONE: no encryption\\n"
+			+ "* STARTTLS: The client sends the command STARTLS and the communication switches to TLS encryption. The operator requires the STARTTLS method and the server must support it.\\n"
+			+ "* TLS: The client requires TLS connection to the server.\\n"
+			+ "The trust store may be changed with the appropriate System property like:\\n"
+			+ "    vmArg: ' -Djavax.net.ssl.trustStore=mykeystore'\\n\\n"
+			+ "The operatoy may send messages to the operator log if something wents wrong during imap operation. See parmater `enableOperatorLog`. "
+			+ "Each scan cycle is finalized with a Window punctuation marker."
+			+ "The operator provides authentication to the imap server. The parameter `password` is required. "
+			+ "This operator should not be placed inside a consistent region.";
 
 	//required out schema
 	private static final String OUTPUT_SCHEMA="tuple<rstring to,rstring replyto,rstring from,int64 date,rstring subject,list<rstring> contentType,list<rstring> content>";
@@ -90,6 +104,7 @@ public class ReadMail extends AbstractOperator {
 	private boolean acceptAllCertificates = false;
 
 	private Metric nEmailFailures;
+	private Metric nIgnoredMessageParts;
 	private Metric nScanCycles;
 
 	//other operator state values
@@ -168,6 +183,10 @@ public class ReadMail extends AbstractOperator {
 	public void setnScanCycles(Metric nScanCycles) {
 		this.nScanCycles = nScanCycles;
 	}
+	@CustomMetric(kind=Kind.COUNTER, description="The number of ignored message parts due to a not supportet content type")
+	public void setnIgnoredMessageParts(Metric nIgnoredMessageParts) {
+		this.nIgnoredMessageParts = nIgnoredMessageParts;
+	}
 	@CustomMetric(kind=Kind.COUNTER, description="The number of failed e-mail operations.")
 	public void setnEmailFailures(Metric nEmailFailures) {
 		this.nEmailFailures = nEmailFailures;
@@ -228,8 +247,10 @@ public class ReadMail extends AbstractOperator {
 			properties.put("mail.store.protocol", "imap");
 			properties.put("mail.imap.host", imapHost);
 			properties.put("mail.imap.port", imapPort);
-			if (encryptionType == EncryptionType.STARTTLS)
-				properties.put("mail.pop3.starttls.enable", "true");
+			if (encryptionType == EncryptionType.STARTTLS) {
+				properties.put("mail.imap.starttls.enable", "true");
+				properties.put("mail.imap.starttls.required", "true");
+			}
 		} else {
 			properties.put("mail.store.protocol", "imaps");
 			properties.put("mail.imaps.host", imapHost);
@@ -353,11 +374,13 @@ public class ReadMail extends AbstractOperator {
 		} catch (MessagingException e) {
 			tracer.error("MessagingException", e);
 			nEmailFailures.increment();
-			logger.error(Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder}));
+			if (enableOperatorLog)
+				logger.error(Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder}));
 		} catch (IOException e) {
 			tracer.error("IOException: " + e.getMessage(), e);
 			nEmailFailures.increment();
-			logger.error(Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder}));
+			if (enableOperatorLog)
+				logger.error(Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder}));
 		} finally {
 			if (emailFolder != null)
 				try {
@@ -393,8 +416,8 @@ public class ReadMail extends AbstractOperator {
 			long date = 0;
 			String datestr = "";
 			if (dateobj != null) {
-				date = dateobj.getTime();
-				datestr = Long.toString(date);
+				datestr= dateobj.toString();
+				date = dateobj.getTime() / 1000; //getTime is in msec
 			}
 			tuple.setLong("date", date);
 			//mime type and content
@@ -415,6 +438,14 @@ public class ReadMail extends AbstractOperator {
 				msg.setFlag(Flags.Flag.DELETED, true);
 			}
 		}
+		StreamingData.Punctuation mark = Punctuation.WINDOW_MARKER;
+		try {
+			out.punctuate(mark);
+		} catch (Exception e) {
+			tracer.error("Can not send Window Marker", e);
+			throw new TupleSendException("Can not send Window Marker");
+		}
+
 	}
 	
 	private void parseContent(Part part, List<RString> content, List<RString> mimeType, String from, String date) throws MessagingException, IOException {
@@ -434,10 +465,11 @@ public class ReadMail extends AbstractOperator {
 				parseContent(mp.getBodyPart(i), content, mimeType, from, date);
 			}
 		} else {
+			nIgnoredMessageParts.increment();
 			String cntType = part.getContentType();
 			if (cntType == null) cntType = "null";
 			String message = "Content type: " + cntType + " is not supported/ignored im email imapHost: " + imapHost + ":" + Integer.toString(imapPort) + " from: " + from + " date: " + date;
-			tracer.error(message);
+			tracer.warn(message);
 			if (enableOperatorLog)
 				logger.warn(message);
 		}
