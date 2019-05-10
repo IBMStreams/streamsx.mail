@@ -16,3 +16,8 @@ namespace com.ibm.streamsx.mail;
  *  * content - list of content
  */
 type Mail = rstring to, rstring replyto, rstring from, int64 date, rstring subject, list<rstring> contentType, list<rstring> content;
+
+/**
+ * Minimum output schema for the optional error port
+ */
+type RuntimeError = timestamp ts, rstring operatorName, rstring peInfo, rstring message, rstring cause;

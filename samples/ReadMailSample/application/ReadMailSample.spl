@@ -22,7 +22,10 @@ public composite ReadMailSample {
 		expression<rstring> $password :        getSubmissionTimeValue("password");
 
 	graph
-		stream<Mail> MailStream = ReadMail() {
+		(
+			stream<Mail> MailStream;
+			stream<RuntimeError> MailErrorStream
+		) = ReadMail() {
 			param
 				imapHost: $imapHost;
 				imapPort: $imapPort;
@@ -42,6 +45,16 @@ public composite ReadMailSample {
 					printStringLn(timeString + "::" + I.subject);
 					println(I);
 					printStringLn("*****************************************************");
+				}
+				onPunct I : println(currentPunct());
+		}
+
+		() as ErrorSink = Custom(MailErrorStream as I) {
+			logic
+				onTuple I : {
+					printStringLn("ERROR *****************************************************");
+					println(I);
+					printStringLn("ERROR *****************************************************");
 				}
 				onPunct I : println(currentPunct());
 		}
