@@ -21,7 +21,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.log4j.Logger;
 
-import com.ibm.streams.operator.AbstractOperator;
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.OperatorContext.ContextCheck;
 import com.ibm.streams.operator.StreamingInput;
@@ -34,8 +33,11 @@ import com.ibm.streams.operator.model.CustomMetric;
 import com.ibm.streams.operator.model.InputPortSet;
 import com.ibm.streams.operator.model.InputPortSet.WindowMode;
 import com.ibm.streams.operator.model.InputPortSet.WindowPunctuationInputMode;
+import com.ibm.streams.operator.model.OutputPortSet.WindowPunctuationOutputMode;
 import com.ibm.streams.operator.model.InputPorts;
 import com.ibm.streams.operator.model.Libraries;
+import com.ibm.streams.operator.model.OutputPortSet;
+import com.ibm.streams.operator.model.OutputPorts;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
 import com.ibm.streams.operator.state.ConsistentRegionContext;
@@ -60,7 +62,9 @@ import com.ibm.streams.operator.state.ConsistentRegionContext;
  * which lead to these methods being called concurrently by different threads.</p> 
  */
 @PrimitiveOperator(name="SendMail", description=SendMail.DESCRIPTION)
+
 @Libraries({"lib/*"})
+
 @InputPorts(
 	{
 		@InputPortSet(
@@ -74,7 +78,20 @@ import com.ibm.streams.operator.state.ConsistentRegionContext;
 		)
 	}
 )
-public class SendMail extends AbstractOperator {
+
+@OutputPorts(
+	{
+		@OutputPortSet(
+			description="Optional error output port. The error output stream must suport at least the attributes "
+					+ "of type [com.ibm.streamsx.mail::RuntimeError|com.ibm.streamsx.mail::RuntimeError]",
+			cardinality=1,
+			optional=true,
+			windowPunctuationOutputMode=WindowPunctuationOutputMode.Free
+		)
+	}
+)
+
+public class SendMail extends MailOperator {
 
 	public static final String DESCRIPTION = ""
 			+ "This operator sends out an e-mail, when a tuple arrives at the input port. The operator has no output port.\\n"
@@ -92,13 +109,6 @@ public class SendMail extends AbstractOperator {
 	protected static Logger logger = Logger.getLogger("com.ibm.streams.operator.log." + SendMail.class.getName());
 	protected static final Logger tracer = Logger.getLogger(SendMail.class.getName());
 
-	//operator enums
-	public enum EncryptionType {
-		NONE,
-		STARTTLS,
-		TLS
-	}
-	
 	//parameter values
 	private EncryptionType encryptionType = EncryptionType.NONE;
 	private String smtpHost = null;
@@ -248,6 +258,9 @@ public class SendMail extends AbstractOperator {
 
 		tracer.trace("Operator " + context.getName() + " initializing in PE: " + context.getPE().getPEId() + " in Job: " + context.getPE().getJobId() );
 
+		//checks
+		checkErrorPortSchema(context, 0);
+
 		//set port defaults
 		if (smtpPort == -1) {
 			switch (encryptionType) {
@@ -333,12 +346,13 @@ public class SendMail extends AbstractOperator {
 	 * Process an incoming tuple that arrived on the specified port.
 	 * @param stream Port the tuple is arriving on.
 	 * @param tuple Object representing the incoming tuple.
+	 * @throws TupleSendException 
 	 * @throws MessagingException 
 	 * @throws AddressException 
 	 * @throws Exception Operator failure, will cause the enclosing PE to terminate.
 	 */
 	@Override
-	public synchronized void process(StreamingInput<Tuple> stream, Tuple tuple) {
+	public synchronized void process(StreamingInput<Tuple> stream, Tuple tuple) throws TupleSendException {
 		Message message=new MimeMessage(session);
 		String toString = null;
 		if (to != null) {
@@ -392,11 +406,13 @@ public class SendMail extends AbstractOperator {
 		} catch (AddressException e) {
 			nEmailFailures.increment();
 			tracer.error("Wrong e-mail address", e);
+			sendErrorTuple("Wrong e-mail address", e);
 			if (enableOperatorLog)
 				logger.error(Messages.getString("LOG_ERROR_WRONG_ADDRESS", new Object[]{smtpHost, smtpPort, toString}));
 		} catch (MessagingException e) {
 			nEmailFailures.increment();
 			tracer.error("Can not send e-mail", e);
+			sendErrorTuple("Can not send e-mail", e);
 			if (enableOperatorLog)
 				logger.error(Messages.getString("LOG_ERROR_CAN_NOT_SEND", new Object[]{smtpHost, smtpPort, toString}));
 		}

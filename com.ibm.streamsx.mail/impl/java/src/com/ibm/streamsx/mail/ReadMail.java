@@ -5,14 +5,10 @@
 package com.ibm.streamsx.mail;
 
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
 import javax.mail.Address;
 import javax.mail.Flags;
@@ -28,13 +24,11 @@ import javax.mail.search.FlagTerm;
 
 import org.apache.log4j.Logger;
 
-import com.ibm.streams.operator.AbstractOperator;
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.OutputTuple;
 import com.ibm.streams.operator.StreamSchema;
 import com.ibm.streams.operator.StreamingData;
 import com.ibm.streams.operator.StreamingData.Punctuation;
-import com.ibm.streams.operator.Type.MetaType;
 import com.ibm.streams.operator.compile.OperatorContextChecker;
 import com.ibm.streams.operator.metrics.Metric;
 import com.ibm.streams.operator.metrics.Metric.Kind;
@@ -46,7 +40,6 @@ import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.OutputPortSet.WindowPunctuationOutputMode;
 import com.ibm.streams.operator.state.ConsistentRegionContext;
 import com.ibm.streams.operator.types.RString;
-import com.ibm.streams.operator.types.Timestamp;
 import com.ibm.streams.operator.model.OutputPorts;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
@@ -64,14 +57,15 @@ import com.ibm.streams.operator.model.PrimitiveOperator;
 					windowPunctuationOutputMode=WindowPunctuationOutputMode.Generating
 			),
 			@OutputPortSet(
-					description="Optional error output port",
+					description="Optional error output port. The error output stream must suport at least the attributes "
+							+ "of type [com.ibm.streamsx.mail::RuntimeError|com.ibm.streamsx.mail::RuntimeError]",
 					cardinality=1,
 					optional=true,
 					windowPunctuationOutputMode=WindowPunctuationOutputMode.Free
 			)
 		}
 )
-public class ReadMail extends AbstractOperator {
+public class ReadMail extends MailOperator {
 	
 	public static final String DESCRIPTION=""
 			+ "The ReadMail operator reads e-mails from an imap server and ingests one tuple for each received e-mail."
@@ -89,19 +83,11 @@ public class ReadMail extends AbstractOperator {
 	//required out schema
 	private static final String OUTPUT_SCHEMA   = "tuple<rstring to,rstring replyto,rstring from,int64 date,rstring subject,list<rstring> contentType,list<rstring> content>";
 	private static final String OUTPUT_SCHEMA_E = "tuple<rstring to,rstring replyto,rstring from,int64 date,rstring subject,list<rstring> contentType,list<rstring> content,rstring error>";
-	private static final String ERROR_OUTPUT_SCHEMA = "tuple<ts,rstring operatorName,rstring peInfo,rstring message,rstring cause>";
 	
 	//register trace and log facility
 	private static Logger logger = Logger.getLogger("com.ibm.streams.operator.log." + ReadMail.class.getName());
 	private static final Logger tracer = Logger.getLogger(ReadMail.class.getName());
 
-	//operator enums
-	public enum EncryptionType {
-		NONE,
-		STARTTLS,
-		TLS
-	}
-	
 	//parameter values
 	private EncryptionType encryptionType = EncryptionType.TLS;
 	private String imapHost = null;
@@ -122,7 +108,6 @@ public class ReadMail extends AbstractOperator {
 	private Metric nScanCycles;
 
 	//other operator state values
-	private boolean hasErrorPort = false;
 	private boolean hasErrorAttribute = false;
 	private boolean isShutdown = false;
 	private Properties properties = null;
@@ -248,55 +233,8 @@ public class ReadMail extends AbstractOperator {
 		} else if ( ! spltype.equals(OUTPUT_SCHEMA)) {
 			throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR", (Object[]) new String[]{OUTPUT_SCHEMA, OUTPUT_SCHEMA_E}));
 		}
-		if (context.getNumberOfStreamingOutputs() > 1) {
-			hasErrorPort = true;
-			StreamSchema errorSchema = getOutput(1).getStreamSchema();
-			Set<String> errorAttributeNames = errorSchema.getAttributeNames();
-			String errorSpltype = errorSchema.getLanguageType();
-			System.out.println("Error output schema: " + errorSpltype);
-			//if (errorAttributeNames.containsAll("ts", "operatorName", "peInfo", "message", "cause")) {
-			if (errorAttributeNames.contains("ts")) {
-				MetaType paramType = errorSchema.getAttribute("ts").getType().getMetaType();
-				if(paramType != MetaType.TIMESTAMP) {
-					throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR_2", "ts", MetaType.TIMESTAMP));
-				}
-			} else {
-				throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR_1", (Object[]) new String[]{ERROR_OUTPUT_SCHEMA}));
-			}
-			if (errorAttributeNames.contains("operatorName")) {
-				MetaType paramType = errorSchema.getAttribute("operatorName").getType().getMetaType();
-				if(paramType != MetaType.RSTRING) {
-					throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR_2", "operatorName", MetaType.RSTRING));
-				}
-			} else {
-				throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR_1", (Object[]) new String[]{ERROR_OUTPUT_SCHEMA}));
-			}
-			if (errorAttributeNames.contains("peInfo")) {
-				MetaType paramType = errorSchema.getAttribute("peInfo").getType().getMetaType();
-				if(paramType != MetaType.RSTRING) {
-					throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR_2", "peInfo", MetaType.RSTRING));
-				}
-			} else {
-				throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR_1", (Object[]) new String[]{ERROR_OUTPUT_SCHEMA}));
-			}
-			if (errorAttributeNames.contains("message")) {
-				MetaType paramType = errorSchema.getAttribute("message").getType().getMetaType();
-				if(paramType != MetaType.RSTRING) {
-					throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR_2", "message", MetaType.RSTRING));
-				}
-			} else {
-				throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR_1", (Object[]) new String[]{ERROR_OUTPUT_SCHEMA}));
-			}
-			if (errorAttributeNames.contains("cause")) {
-				MetaType paramType = errorSchema.getAttribute("cause").getType().getMetaType();
-				if(paramType != MetaType.RSTRING) {
-					throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR_2", "cause", MetaType.RSTRING));
-				}
-			} else {
-				throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR_1", (Object[]) new String[]{ERROR_OUTPUT_SCHEMA}));
-			}
-		}
-
+		checkErrorPortSchema(context, 1);
+		
 		System.out.println(oname + "encryptionType: " + encryptionType.name());
 		System.out.println(oname + "username: " + username);
 		System.out.println(oname + "folder: " + folder);
@@ -398,8 +336,7 @@ public class ReadMail extends AbstractOperator {
 
 	/**
 	 * Shutdown this operator, which will interrupt the thread
-	 * executing the <code>produceTuples()</code> method.
-	 * @throws Exception Operator failure, will cause the enclosing PE to terminate.
+	 * @throws Exception - Operator failure, will cause the enclosing PE to terminate.
 	 */
 	public synchronized void shutdown() throws Exception {
 		isShutdown = true;
@@ -409,6 +346,11 @@ public class ReadMail extends AbstractOperator {
 		super.shutdown();
 	}
 
+	/**
+	 * Scans an e-mail folder
+	 * @throws TupleSendException - will cause the enclosing PE to terminate.
+	 * @throws FlagNotSupportedException - will cause the enclosing PE to terminate.
+	 */
 	private void scan() throws TupleSendException, FlagNotSupportedException {
 		Folder emailFolder = null;
 		try {
@@ -438,19 +380,17 @@ public class ReadMail extends AbstractOperator {
 			processMessages(messages);
 
 		} catch (MessagingException e) {
-			tracer.error("MessagingException:" + e.getMessage(), e);
+			tracer.error("MessagingException: " + e.getMessage(), e);
 			nEmailFailures.increment();
-			String errmess = Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder});
-			sendErrorTuple(errmess, e);
+			sendErrorTuple("MessagingException: ", e);
 			if (enableOperatorLog)
-				logger.error(errmess);
+				logger.error(Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder}));
 		} catch (IOException e) {
 			tracer.error("IOException: " + e.getMessage(), e);
 			nEmailFailures.increment();
-			String errmess = Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder});
-			sendErrorTuple(errmess, e);
+			sendErrorTuple("IOException : ", e);
 			if (enableOperatorLog)
-				logger.error(errmess);
+				logger.error(Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder}));
 		} finally {
 			if (emailFolder != null)
 				try {
@@ -463,6 +403,13 @@ public class ReadMail extends AbstractOperator {
 		}
 	}
 
+	/**
+	 * Sends an output tuple for every message in input array
+	 * @param messages - the array with the e-mails to send
+	 * @throws MessagingException
+	 * @throws IOException
+	 * @throws TupleSendException
+	 */
 	private void processMessages(Message[] messages) throws MessagingException, IOException, TupleSendException {
 		Integer nc = new Integer(messages.length);
 		tracer.debug(nc.toString() + " messages received from folder: " + folder);
@@ -525,6 +472,17 @@ public class ReadMail extends AbstractOperator {
 
 	}
 	
+	/**
+	 * Parse one message part. Works recursive on multipart messages
+	 * @param part - the part to parse
+	 * @param content - the output content
+	 * @param mimeType - the output mime type of the message part
+	 * @param from - input from address
+	 * @param date - input message date
+	 * @param contentTypeErrors - the output for the detected content type errors
+	 * @throws MessagingException
+	 * @throws IOException
+	 */
 	private void parseContent(Part part, List<RString> content, List<RString> mimeType, String from, String date, StringBuffer contentTypeErrors) throws MessagingException, IOException {
 		if (part.isMimeType("text/plain") || part.isMimeType("text/HTML")) {
 			String contpart = (String)part.getContent();
@@ -545,41 +503,18 @@ public class ReadMail extends AbstractOperator {
 			nIgnoredMessageParts.increment();
 			String cntType = part.getContentType();
 			if (cntType == null) cntType = "null";
-			String message = "Content type: " + cntType + " is not supported/ignored im email imapHost: " + imapHost + ":" + Integer.toString(imapPort) + " from: " + from + " date: " + date;
+			String message = "Content type: " + cntType + " is not supported/ignored in email imapHost: " + imapHost + ":" + Integer.toString(imapPort) + " from: " + from + " date: " + date;
 			contentTypeErrors.append(message);
 			tracer.warn(message);
 			if (enableOperatorLog)
-				logger.warn(message);
+				logger.warn(Messages.getString("LOG_WARN_MIME_TYPE", new Object[]{cntType, imapHost, imapPort, from, date}));
 		}
 	}
 
-	private void sendErrorTuple(String message, String cause) throws TupleSendException {
-		if (hasErrorPort) {
-			final StreamingOutput<OutputTuple> out = getOutput(1);
-			OutputTuple tuple= out.newTuple();
-			tuple.setTimestamp("ts", Timestamp.currentTime());
-			tuple.setString("operatorName", getOperatorContext().getLogicalName());
-			BigInteger peid = getOperatorContext().getPE().getPEId();
-			tuple.setString("peInfo", peid.toString());
-			tuple.setString("message", message);
-			tuple.setString("cause", cause);
-			try {
-				out.submit(tuple);
-			} catch (Exception e) {
-				throw new TupleSendException("Can not send error tuple");
-			}
-		}
-	}
-	
-	private void sendErrorTuple(String message, Throwable e) throws TupleSendException {
-		if (hasErrorPort) {
-			StringWriter strw = new StringWriter();
-			PrintWriter prtw = new PrintWriter(strw);
-			e.printStackTrace(prtw);
-			sendErrorTuple(message, e.getMessage() + ": " + strw.toString());
-		}
-	}
-	
+	/**
+	 * Make a comma separated list from address array
+	 * @param - the input address array
+	 */
 	private StringBuffer makeAddressList(Address[] addresses) {
 		StringBuffer sb = new StringBuffer();
 		if (addresses != null) {

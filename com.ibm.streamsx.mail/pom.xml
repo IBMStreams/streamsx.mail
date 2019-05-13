@@ -12,7 +12,7 @@
     <groupId>com.ibm.streamsx.mail</groupId>
     <artifactId>streamsx.mail</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
     <name>com.ibm.streamsx.mail</name>
     <repositories>
         <repository>
