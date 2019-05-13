@@ -5,9 +5,11 @@
 package com.ibm.streamsx.mail;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -44,6 +46,7 @@ import com.ibm.streams.operator.model.OutputPortSet;
 import com.ibm.streams.operator.model.OutputPortSet.WindowPunctuationOutputMode;
 import com.ibm.streams.operator.state.ConsistentRegionContext;
 import com.ibm.streams.operator.types.RString;
+import com.ibm.streams.operator.types.Timestamp;
 import com.ibm.streams.operator.model.OutputPorts;
 import com.ibm.streams.operator.model.Parameter;
 import com.ibm.streams.operator.model.PrimitiveOperator;
@@ -84,8 +87,9 @@ public class ReadMail extends AbstractOperator {
 			+ "This operator should not be placed inside a consistent region.";
 
 	//required out schema
-	private static final String OUTPUT_SCHEMA="tuple<rstring to,rstring replyto,rstring from,int64 date,rstring subject,list<rstring> contentType,list<rstring> content>";
-	private static final String ERROR_OUTPUT_SCHEMA="tuple<ts,rstring operatorName,rstring peInfo,rstring message,rstring cause>";
+	private static final String OUTPUT_SCHEMA   = "tuple<rstring to,rstring replyto,rstring from,int64 date,rstring subject,list<rstring> contentType,list<rstring> content>";
+	private static final String OUTPUT_SCHEMA_E = "tuple<rstring to,rstring replyto,rstring from,int64 date,rstring subject,list<rstring> contentType,list<rstring> content,rstring error>";
+	private static final String ERROR_OUTPUT_SCHEMA = "tuple<ts,rstring operatorName,rstring peInfo,rstring message,rstring cause>";
 	
 	//register trace and log facility
 	private static Logger logger = Logger.getLogger("com.ibm.streams.operator.log." + ReadMail.class.getName());
@@ -119,6 +123,7 @@ public class ReadMail extends AbstractOperator {
 
 	//other operator state values
 	private boolean hasErrorPort = false;
+	private boolean hasErrorAttribute = false;
 	private boolean isShutdown = false;
 	private Properties properties = null;
 	private Thread processThread = null;
@@ -238,8 +243,10 @@ public class ReadMail extends AbstractOperator {
 		StreamSchema ss = so.getStreamSchema();
 		String spltype = ss.getLanguageType();
 		System.out.println("Output schema: " + spltype);
-		if ( ! spltype.equals(OUTPUT_SCHEMA)) {
-			throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR", (Object[]) new String[]{OUTPUT_SCHEMA}));
+		if (spltype.equals(OUTPUT_SCHEMA_E)) {
+			hasErrorAttribute = true;
+		} else if ( ! spltype.equals(OUTPUT_SCHEMA)) {
+			throw new IllegalArgumentException(Messages.getString("OUTPUT_SCHEMA_ERROR", (Object[]) new String[]{OUTPUT_SCHEMA, OUTPUT_SCHEMA_E}));
 		}
 		if (context.getNumberOfStreamingOutputs() > 1) {
 			hasErrorPort = true;
@@ -431,22 +438,27 @@ public class ReadMail extends AbstractOperator {
 			processMessages(messages);
 
 		} catch (MessagingException e) {
-			tracer.error("MessagingException", e);
+			tracer.error("MessagingException:" + e.getMessage(), e);
 			nEmailFailures.increment();
+			String errmess = Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder});
+			sendErrorTuple(errmess, e);
 			if (enableOperatorLog)
-				logger.error(Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder}));
+				logger.error(errmess);
 		} catch (IOException e) {
 			tracer.error("IOException: " + e.getMessage(), e);
 			nEmailFailures.increment();
+			String errmess = Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder});
+			sendErrorTuple(errmess, e);
 			if (enableOperatorLog)
-				logger.error(Messages.getString("LOG_ERROR_RECEIVE", new Object[]{imapHost, imapPort, username, folder}));
+				logger.error(errmess);
 		} finally {
 			if (emailFolder != null)
 				try {
 					emailFolder.close(true);
 					store.close();
 				} catch (MessagingException e) {
-					tracer.error("MessagingException: " + e.getMessage());
+					tracer.error("MessagingException: " + e.getMessage(), e);
+					sendErrorTuple("MessagingException: ", e);
 				}
 		}
 	}
@@ -486,6 +498,8 @@ public class ReadMail extends AbstractOperator {
 			parseContent(msg, contentList, mimeTypeList, fromAddr.toString(), datestr, contentTypeErrors);
 			tuple.setList("contentType", mimeTypeList);
 			tuple.setList("content", contentList);
+			if (hasErrorAttribute && ! contentTypeErrors.toString().isEmpty())
+				tuple.setString("error", contentTypeErrors.toString());
 
 			try {
 				out.submit(tuple);
@@ -543,6 +557,10 @@ public class ReadMail extends AbstractOperator {
 		if (hasErrorPort) {
 			final StreamingOutput<OutputTuple> out = getOutput(1);
 			OutputTuple tuple= out.newTuple();
+			tuple.setTimestamp("ts", Timestamp.currentTime());
+			tuple.setString("operatorName", getOperatorContext().getLogicalName());
+			BigInteger peid = getOperatorContext().getPE().getPEId();
+			tuple.setString("peInfo", peid.toString());
 			tuple.setString("message", message);
 			tuple.setString("cause", cause);
 			try {
@@ -550,6 +568,15 @@ public class ReadMail extends AbstractOperator {
 			} catch (Exception e) {
 				throw new TupleSendException("Can not send error tuple");
 			}
+		}
+	}
+	
+	private void sendErrorTuple(String message, Throwable e) throws TupleSendException {
+		if (hasErrorPort) {
+			StringWriter strw = new StringWriter();
+			PrintWriter prtw = new PrintWriter(strw);
+			e.printStackTrace(prtw);
+			sendErrorTuple(message, e.getMessage() + ": " + strw.toString());
 		}
 	}
 	

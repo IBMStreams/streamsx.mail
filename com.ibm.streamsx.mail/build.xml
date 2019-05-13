@@ -64,7 +64,7 @@
 	</path>
 
 	<target name="toolkit" depends="jar" description="Build the toolkit">
-		<exec executable="${spl-mt}">
+		<exec executable="${spl-mt}" failonerror="true">
 			<arg value="--directory"/>
 			<arg value="${basedir}"/>
 		</exec>

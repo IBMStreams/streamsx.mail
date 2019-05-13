@@ -18,6 +18,19 @@ namespace com.ibm.streamsx.mail;
 type Mail = rstring to, rstring replyto, rstring from, int64 date, rstring subject, list<rstring> contentType, list<rstring> content;
 
 /**
+ * Extended output schema of the ReadMail operator
+ *  * to - the list of the e-mail recipients
+ *  * replyto - the envelop return address of the e-mail
+ *  * from - from address
+ *  * date - date string
+ *  * subject - subject
+ *  * contentType - list of content types of the message parts
+ *  * content - list of content
+ *  * error - Error information of the received mail
+ */
+type Maile = rstring to, rstring replyto, rstring from, int64 date, rstring subject, list<rstring> contentType, list<rstring> content, rstring error;
+
+/**
  * Minimum output schema for the optional error port
  */
 type RuntimeError = timestamp ts, rstring operatorName, rstring peInfo, rstring message, rstring cause;

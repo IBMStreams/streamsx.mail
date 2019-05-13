@@ -23,7 +23,7 @@ public composite ReadMailSample {
 
 	graph
 		(
-			stream<Mail> MailStream;
+			stream<Maile> MailStream;
 			stream<RuntimeError> MailErrorStream
 		) = ReadMail() {
 			param
@@ -53,7 +53,8 @@ public composite ReadMailSample {
 			logic
 				onTuple I : {
 					printStringLn("ERROR *****************************************************");
-					println(I);
+					rstring timeString = ctime(I.ts);
+					printStringLn(timeString + ":" + (rstring)I);
 					printStringLn("ERROR *****************************************************");
 				}
 				onPunct I : println(currentPunct());
