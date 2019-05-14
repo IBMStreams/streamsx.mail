@@ -1,0 +1,46 @@
+use com.ibm.streamsx.mail::*;
+
+public composite Main {
+
+	graph
+		(
+			//<0>stream<rstring to, rstring replyto, rstring from, int64 date, rstring subject, list<rstring> contentType, rstring content> MailStream;
+			//<1>stream<rstring to, rstring replyto, rstring from, int64 date, rstring subject, list<rstring> contentType, list<rstring> content> MailStream;
+			//<0>stream<RuntimeError> MailErrorStream
+			//<1>stream<timestamp ts, rstring operatorName, int32 peInfo, rstring message, rstring cause> MailErrorStream
+		) = ReadMail() {
+			param
+				imapHost: "localhost";
+				username: "streamsadmin@localhost";
+				password: "password";
+				iterations: 2l;
+				period: 20.0;
+		}
+		
+		() as Sink = Custom(MailStream as I) {
+			logic
+				onTuple I : {
+					timestamp tim = createTimestamp(I.date, 0u);
+					rstring timeString = ctime(tim);
+					printStringLn(timeString + "::" + I.subject);
+					println(I);
+					printStringLn("*****************************************************");
+				}
+				onPunct I : println(currentPunct());
+		}
+
+		() as ErrorSink = Custom(MailErrorStream as I) {
+			logic
+				onTuple I : {
+					printStringLn("ERROR *****************************************************");
+					rstring timeString = ctime(I.ts);
+					printStringLn(timeString + ":" + (rstring)I);
+					printStringLn("ERROR *****************************************************");
+				}
+				onPunct I : println(currentPunct());
+		}
+
+	config
+		restartable: false;
+
+}
