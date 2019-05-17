@@ -10,7 +10,7 @@ $TTPR_curlCommand --version
 makeMailId() {
   local tim=$(date +%s)
   local hn=$(hostname -f)
-  TTTT_result="${hn}_${tim}"
+  TTTT_result="${hn}_${tim}_${TTRO_case}_${TTRO_variantCase}"
 }
 export -f makeMailId
 
@@ -24,7 +24,23 @@ export -f makeMailId
 #   TTTT_result
 # abort if something wents wrong
 getNumberUniqeIds() {
-  echo "$*"
+  echo "$FUNCNAME $*"
+  #check whether mbox is empty
+  local resp
+  if ! resp=$($TTPR_curlCommand --insecure --user "$2:$3" "imaps://$1/inbox" -X 'STATUS INBOX (MESSAGES)'); then
+    return 1
+  fi
+  local noMessages
+  if [[ "$resp" =~ \*\ STATUS\ INBOX\ \(MESSAGES\ (.*)\) ]]; then
+    noMessages="${BASH_REMATCH[1]}"
+    if [[ "$noMessages" -eq 0 ]]; then
+      TTTT_result=0
+      return 0;
+    fi
+  else
+    printErrorAndExit "No number of messages found in: $resp" $errRt
+  fi
+  #get uid list
   local list1
   if ! list1=$($TTPR_curlCommand --insecure --user "$2:$3" "imaps://$1/inbox" -X 'FETCH 1:* (UID)'); then
     return 1
@@ -39,18 +55,21 @@ getNumberUniqeIds() {
   done
   )
   echo "uidlist=$uidlist"
-  local uid mailcont
+  #count mails with matching text
+  local uid
   local countMatchingMails=0
-  for uid in $uidlist; do
-    if ! $TTPR_curlCommand --insecure --user "$2:$3" "imaps://$1/inbox;UID=$uid" > "mailcontent_${uid}.txt"; then
-      return 1
-    fi
-    if linewisePatternMatch "mailcontent_${uid}.txt" '' "*$4*"; then
-      echo "Match found in uid=$uid pattern:$4"
-      countMatchingMails=$((countMatchingMails+1))
+  for ((uid=1;  uid<=noMessages; uid++)); do
+    if $TTPR_curlCommand --insecure --user "$2:$3" "imaps://$1/inbox;UID=$uid" > "mailcontent_$2_${uid}.txt"; then
+      if linewisePatternMatch "mailcontent_$2_${uid}.txt" '' "*$4*"; then
+        echo "Match found in uid=$uid pattern:$4"
+        countMatchingMails=$((countMatchingMails+1))
+      fi
+    else
+      echo "can not read message id=$uid"
     fi
   done
   TTTT_result="$countMatchingMails"
+  echo "$TTTT_result matching messages found in mbox: $2"
   return 0
 }
 export -f getNumberUniqeIds

@@ -35,6 +35,7 @@ public composite ReadMailSample {
 				period: 20.0;
 				//readNewMailsOnly: true;
 				//deleteAfterRead: true;
+				//acceptAllCertificates: true;
 		}
 		
 		() as Sink = Custom(MailStream as I) {
