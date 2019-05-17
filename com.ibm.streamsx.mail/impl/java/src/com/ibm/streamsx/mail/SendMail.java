@@ -23,6 +23,7 @@ import org.apache.log4j.Logger;
 
 import com.ibm.streams.operator.OperatorContext;
 import com.ibm.streams.operator.OperatorContext.ContextCheck;
+import com.ibm.streams.operator.StreamingData.Punctuation;
 import com.ibm.streams.operator.StreamingInput;
 import com.ibm.streams.operator.Tuple;
 import com.ibm.streams.operator.TupleAttribute;
@@ -70,7 +71,8 @@ import com.ibm.streams.operator.state.ConsistentRegionContext;
 		@InputPortSet(
 			description="Every tuple received from this port triggers an outgoing e-mail. The attributes if the input stream "
 				+ "may be used as parameters and content for the e-mail to sent. These attributes are configured through "
-				+ "the parameters `toAttribute`, `ccAttribute`, `bccAttribute`, `subject` and `content`.",
+				+ "the parameters `toAttribute`, `ccAttribute`, `bccAttribute`, `subject` and `content`. Window punctuation "
+				+ "markers are ignored.",
 			cardinality=1,
 			optional=false,
 			windowingMode=WindowMode.NonWindowed,
@@ -416,6 +418,17 @@ public class SendMail extends MailOperator {
 			if (enableOperatorLog)
 				logger.error(Messages.getString("LOG_ERROR_CAN_NOT_SEND", new Object[]{smtpHost, smtpPort, toString}));
 		}
+	}
+
+	/**
+	 * Process an incoming punctuation that arrived on the specified port.
+	 * @param stream Port the punctuation is arriving on.
+	 * @param mark The punctuation mark
+	 */
+	@Override
+	public synchronized void processPunctuation(StreamingInput<Tuple> stream, Punctuation mark) {
+		//ignore window punctuation marker
+		//final marker will be passed anyway
 	}
 
 	/**
