@@ -1,0 +1,34 @@
+use com.ibm.streamsx.mail::*;
+use com.ibm.streamsx.testframe::*;
+
+public composite Main {
+	param
+		expression<rstring> $smtpHost :        getCompileTimeValue("smtpHost");
+		//expression<int32>   $smtpPort : (int32)getSubmissionTimeValue("smtpPort");
+		expression<rstring> $from :            getCompileTimeValue("from");
+		expression<list<rstring>> $toList :    (list<rstring>)getCompileTimeValue("toList");
+		expression<rstring> $uniqId :          getCompileTimeValue("uniqId");
+
+	graph
+		stream<uint64 count, rstring rcpt, rstring uniqId> TriggerStreams as O = Beacon() {
+			param
+				iterations: 3;
+			output
+				O: count = IterationCount() + 1ul,
+					rcpt = $toList[IterationCount()],
+					uniqId = $uniqId;
+		}
+
+		//<noErrorPort>() as MailSink = SendMail(TriggerStreams as I) {
+		//<errorPort>stream<RuntimeError> ErrorStream = SendMail(TriggerStreams as I) {
+			param
+				smtpHost: $smtpHost;
+				from: $from;
+				toAttribute: rcpt;
+				content: "Mail from streams: number ", "count", " was sent.\nUniqId: ", "uniqId";
+		}
+
+		//<errorPort>() as ErrorSink = FileSink1(ErrorStream) { }
+	config
+		restartable: false;
+}
