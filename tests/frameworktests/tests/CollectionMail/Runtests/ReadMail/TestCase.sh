@@ -38,7 +38,7 @@ myCompile() {
 
 myEval() {
   local fname="$TTRO_workDirCase/data/Tuples"
-  grep "$myId" "$fname"
-  local count=$(grep "$myId" "$fname" | wc -l)
+  grep "$myId\"" "$fname"
+  local count=$(grep "$myId\"" "$fname" | wc -l)
   if [[ "$count" -ne 6 ]]; then setFailure "Wrong count of received e mails. Count must be 6 but count is: $count"; fi
 }
