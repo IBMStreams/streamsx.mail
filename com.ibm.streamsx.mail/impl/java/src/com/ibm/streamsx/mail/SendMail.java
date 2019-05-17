@@ -124,7 +124,7 @@ public class SendMail extends MailOperator {
 	private TupleAttribute<Tuple, String> toAttribute = null;
 	private TupleAttribute<Tuple, String> ccAttribute = null;
 	private TupleAttribute<Tuple, String> bccAttribute = null;
-	private String[] subject = {"ALERT form Streams !"};
+	private String[] subject = {"ALERT from Streams !"};
 	private String[] content = {" "};
 	private boolean enableOperatorLog = true;
 	private boolean acceptAllCertificates = false;

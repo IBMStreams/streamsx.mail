@@ -73,3 +73,26 @@ getNumberUniqeIds() {
   return 0
 }
 export -f getNumberUniqeIds
+
+#send a e-mail with uniqe id to mbox
+# parameters
+#   $1 - smtp server name
+#   $2 - from
+#   $3 - to
+#   $4 - uniqe id
+#   $5 - count
+# return
+#   true
+# abort if something wents wrong
+sendMailTo() {
+  echo "$FUNCNAME $*"
+  local fname="$TTRO_workDirCase/mailtxt.txt"
+  {
+    echo "Subject: A message to Streams no: $5"
+    echo " a text $4"
+    echo "END"
+  } > "$fname"
+  $TTPR_curlCommand --mail-from "$2@$1" --mail-rcpt "$3@$1" --url smtp://$1 -T "$fname"
+  rm "$fname"
+}
+export -f sendMailTo

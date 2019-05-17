@@ -1,0 +1,36 @@
+use com.ibm.streamsx.mail::*;
+use com.ibm.streamsx.testframe::*;
+
+public composite Main {
+	param
+		expression<rstring> $imapHost :        getCompileTimeValue("imapHost");
+		//expression<int32>   $imapPort : (int32)getSubmissionTimeValue("imapPort", "993");
+		expression<rstring> $username :        getCompileTimeValue("username");
+		expression<rstring> $password :        getCompileTimeValue("password");
+
+	graph
+		(
+			//<read>stream<Mail> MailStream
+			//<!read>stream<Maile> MailStream
+			//<readPort>; stream<RuntimeError> MailErrorStream
+		) = ReadMail() {
+			param
+				imapHost: $imapHost;
+				//imapPort: $imapPort;
+				username: $username;
+				password: $password;
+				iterations: 2l;
+				period: 20.0;
+				//readNewMailsOnly: true;
+				//deleteAfterRead: true;
+				acceptAllCertificates: true;
+		}
+
+		() as Sink = FileSink1(MailStream) { }
+
+		//<readPort>() as ErrorSink = FileSink1(MailErrorStream) { param fnameTuples: "ErrorTuples"; fnameWindowMarker: "ErrorWindowMarker"; fnameFinalMarker: "ErrorFinalMarker"; }
+
+	config
+		restartable: false;
+
+}

@@ -1,7 +1,5 @@
 #--variantList='to to2 ccAttribute bccAttribute'
 
-setCategory 'quick'
-
 declare -A myExplain=(
 	[to]='**** Send 3 simple mails with and check whether 3 e-mail with matching content are in inbox ****'
 	[to2]='**** Send 3 simple mails to 2 recipents and check whether 3 e-mail with matching content are in inbox ****'

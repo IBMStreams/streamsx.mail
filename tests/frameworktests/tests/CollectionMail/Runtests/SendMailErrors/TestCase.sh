@@ -1,7 +1,5 @@
 #--variantList='noErrorPort errorPort'
 
-setCategory 'quick'
-
 declare -A myExplain=(
 	[noErrorPort]='**** Send 3 simple mails to mailuser1, adress with error and to mailuser1 and check whether there are 2 e-mail with matching content are in inbox ****'
 	[errorPort]='**** same case but with error port ****'
