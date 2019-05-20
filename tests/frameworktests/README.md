@@ -45,27 +45,40 @@ The test framework requires an valid Streams installation and environment and a 
 
 ## Installation of a Test E-mail Server
 
-### Postfix Installation 
-* Install the packages postfix
+### Install the required Packages
+
+* Install packages `postfix` and `dovecot`
+
+### Postfix Configuration 
 
 * In directory `/etc/postfix` edit the file `main.cf` as root
 
 * Enter the mailserver hostname
-```myhostname = <mailserver fqdn>```
+```
+myhostname = <mailserver fqdn>
+```
 
 * Enter the mail domain
-```mydomain = <domain part of mailserver fqdn>```
+```
+mydomain = <domain part of mailserver fqdn>
+```
 
 * Set the default origin
-```myorigin = $mydomain```
+```
+myorigin = $mydomain
+```
 
 * Set the interface configuration
-```inet_interfaces = all```
-```#inet_interfaces = localhost```
+```
+inet_interfaces = all
+#inet_interfaces = localhost
+```
 
 * Set the maildir
-```home_mailbox = Maildir/```
-```mailbox_command =```
+```
+home_mailbox = Maildir/
+mailbox_command =
+```
 
 * Enter the location for ssl certificate and key file
 ```
@@ -73,6 +86,7 @@ smtpd_tls_cert_file = /etc/pki/postfix/certs/dovecot.pem
 smtpd_tls_key_file = /etc/pki/postfix/private/dovecot.pem
 smtpd_use_tls=yes
 ```
+
 * Copy the installed certificates and change the ownership to postfix
 ```
 #cp -p /etc/pki/dovecot/certs/dovecot.pem /etc/pki/postfix/certs/dovecot.pem
@@ -139,14 +153,7 @@ Make sure that the private key file has 0600 access permissions.
 > #  -o milter_macro_daemon_name=ORIGINATING
 ```
 
-* Enable and restart the postfix daemon
-```
-systemctl enable postfix
-systemctl stop postfix
-systemctl start postfix
-```
-
-### Dovecut Installation 
+### Dovecut Configuration 
 
 * Create 2 new mail users and enter the default password `streams1`
 ```
@@ -155,8 +162,6 @@ systemctl start postfix
 passwd mailuser1
 passwd mailuser2
 ```
-
-* Install package dovecot
 
 * Change file `/etc/dovecot/conf.d/10-master.conf`
 ```
@@ -169,10 +174,14 @@ service auth {
 ```
 
 * Change file `/etc/dovecot/conf.d/10-mail.conf`
-```first_valid_uid = 500```
+```
+first_valid_uid = 500
+```
 
 * Change file `/etc/dovecot/conf.d/10-ssl.conf` if necessary
-```first_valid_uid = 500```
+```
+first_valid_uid = 500
+```
 
 * Change file `/etc/dovecot/conf.d/10-auth.conf`
 ```
@@ -181,12 +190,23 @@ disable_plaintext_auth = no
 ssl_cert = </etc/pki/dovecot/certs/dovecot.pem
 ssl_key = </etc/pki/dovecot/private/dovecot.pem
 ```
-* Start and enable the daemon
+
+### Server startup 
+
+* Enable and restart the postfix daemon
+```
+systemctl enable postfix
+systemctl stop postfix
+systemctl start postfix
+```
+
+* Start and enable the dovecot daemon
 ```
 systemctl enable dovecot
 systemctl stop dovecot
 systemctl start dovecot
 ```
+
 * Check the server logs (postfix and dovecot) in `/var/log/maillog`
 
 ## Curl
