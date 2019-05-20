@@ -1,7 +1,9 @@
 #get the path to python3 and use curl from anaconda
-mypath1=$(which python3)
-anacondapath=${mypath1%/*}
-setVar 'TTPR_curlCommand' "${anacondapath}/curl"
+if isNotExisting 'TTPR_curlCommand'; then
+  mypath1=$(which python3)
+  anacondapath=${mypath1%/*}
+  setVar 'TTPR_curlCommand' "${anacondapath}/curl"
+fi
 echo "TTPR_curlCommand=$TTPR_curlCommand"
 $TTPR_curlCommand --version
 
