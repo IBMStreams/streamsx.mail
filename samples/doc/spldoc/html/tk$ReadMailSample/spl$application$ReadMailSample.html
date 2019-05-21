@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="en-us" lang="en-us">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta name="copyright" content="(C) Copyright 2005"/>
+<meta name="DC.rights.owner" content="(C) Copyright 2005"/>
+<meta name="DC.Type" content="reference"/>
+<meta name="DC.Title" content="SPL File ReadMailSample.spl"/>
+<meta name="DC.Format" content="XHTML"/>
+<meta name="DC.Identifier" content="spldoc_compilationunit"/>
+<link rel="stylesheet" type="text/css" href="../../html/commonltr.css"/>
+<link rel="stylesheet" type="text/css" href="../../html/spldoc.css"/>
+<title>SPL File ReadMailSample.spl</title>
+</head>
+<body id="spldoc_compilationunit">
+
+
+<h1 class="title topictitle1">SPL File <tt class="ph tt">ReadMailSample.spl</tt></h1>
+
+<div class="body refbody">
+<div class="section">
+<p class="p">
+<a class="xref" href="../toolkits/toolkits.html">IBMStreams streamsx.mail Toolkit</a> &gt; <a class="xref" href="tk$ReadMailSample.html">ReadMailSample 1.0.0</a> &gt; <a class="xref" href="ns$application.html">application</a> &gt; ReadMailSample.spl</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Content</h2>
+  
+  <dl class="dl">
+    <dt class="dt dlterm"/>
+<dd class="dd"/>
+
+    
+      <dt class="dt dlterm splhead-2">Operators</dt>
+
+      <dd class="dd">
+<ul class="sl simple">
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$application$ReadMailSample.html#spldoc_compilationunit__composite_operator__ReadMailSample">ReadMailSample</a></strong>: This sample demonstrates the use of the ReadMail operator.
+</li>
+
+</ul>
+
+      </dd>
+
+    
+  </dl>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-1">Composites</h2>
+  
+</div>
+
+<div class="section" id="spldoc_compilationunit__composite_operator__ReadMailSample"><h2 class="title sectiontitle splpart">composite ReadMailSample</h2>
+  
+</div>
+
+<div class="section splgraph">
+  <embed class="image" src="../../image/tk$ReadMailSample/op$application$ReadMailSample.svg" width="232" height="154"/>
+</div>
+
+<div class="section">
+
+<p class="p">This sample demonstrates the use of the ReadMail operator. This sample connects to an imap server and receives all e-mails in folder 'INBOX'. The operator performs 2 scan cycles. Provide the parameters for an e-mail account and adapt the  encryption type if required.
+</p>
+
+</div>
+
+<div class="section"><h2 class="title sectiontitle">Parameters</h2>
+
+<ul class="sl simple">
+<li class="sli"><strong class="ph b">imapHost</strong>: The imap server name/address
+</li>
+
+<li class="sli"><strong class="ph b">imapPort</strong>: The SMTP host port
+</li>
+
+<li class="sli"><strong class="ph b">username</strong>: e-mail account username
+</li>
+
+<li class="sli"><strong class="ph b">password</strong>: e-mail account password
+</li>
+
+</ul>
+
+</div>
+
+<div class="section">
+</div>
+
+<div class="section">
+</div>
+
+<div class="section"><h2 class="title sectiontitle splhead-2">SPL Source Code</h2>
+  
+</div>
+
+
+<div class="section">
+   <pre class="pre codeblock">
+
+ public composite ReadMailSample {
+ 	param
+ 		expression&lt;rstring&gt; $imapHost :        getSubmissionTimeValue("imapHost");
+ 		expression&lt;int32&gt;   $imapPort : (int32)getSubmissionTimeValue("imapPort", "993");
+ 		expression&lt;rstring&gt; $username :        getSubmissionTimeValue("username");
+ 		expression&lt;rstring&gt; $password :        getSubmissionTimeValue("password");
+ 
+ 	graph
+ 		(
+ 			stream&lt;Maile&gt; MailStream;
+ 			stream&lt;RuntimeError&gt; MailErrorStream
+ 		) = ReadMail() {
+ 			param
+ 				imapHost: $imapHost;
+ 				imapPort: $imapPort;
+ 				username: $username;
+ 				password: $password;
+ 				iterations: 2l;
+ 				period: 20.0;
+ 				//readNewMailsOnly: true;
+ 				//deleteAfterRead: true;
+ 				//acceptAllCertificates: true;
+ 		}
+ 		
+ 		() as Sink = Custom(MailStream as I) {
+ 			logic
+ 				onTuple I : {
+ 					timestamp tim = createTimestamp(I.date, 0u);
+ 					rstring timeString = ctime(tim);
+ 					printStringLn(timeString + "::" + I.subject);
+ 					println(I);
+ 					printStringLn("*****************************************************");
+ 				}
+ 				onPunct I : println(currentPunct());
+ 		}
+ 
+ 		() as ErrorSink = Custom(MailErrorStream as I) {
+ 			logic
+ 				onTuple I : {
+ 					printStringLn("ERROR *****************************************************");
+ 					rstring timeString = ctime(I.ts);
+ 					printStringLn(timeString + ":" + (rstring)I);
+ 					printStringLn("ERROR *****************************************************");
+ 				}
+ 				onPunct I : println(currentPunct());
+ 		}
+ 
+ 	config
+ 		restartable: false;
+ 
+ }
+
+   </pre>
+
+</div>
+
+</div>
+
+
+</body>
+</html>

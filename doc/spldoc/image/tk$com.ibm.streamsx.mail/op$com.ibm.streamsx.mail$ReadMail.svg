@@ -43,14 +43,10 @@
     /><g style="fill:rgb(236,131,101); font-weight:bold; font-family:sans-serif; stroke:rgb(236,131,101);"
     ><rect x="146" y="58" width="16" style="stroke:none;" rx="1" ry="1" height="16"
       /><rect x="148" y="60" width="12" style="fill:gray; stroke:none;" rx="0.75" ry="0.75" height="12"
-      /><path d="M156.6406 63.6875 L154.5469 64.8281 L156.6406 65.9688 L156.2969 66.5469 L154.3281 65.3594 L154.3281 67.5625 L153.6719 67.5625 L153.6719 65.3594 L151.7031 66.5469 L151.3594 65.9688 L153.4688 64.8281 L151.3594 63.6875 L151.7031 63.1094 L153.6719 64.2969 L153.6719 62.0938 L154.3281 62.0938 L154.3281 64.2969 L156.2969 63.1094 L156.6406 63.6875 Z" style="fill:black; stroke:none;"
+      /><path d="M151.4844 70 L153.4219 70 L153.4219 63.3281 L151.3125 63.75 L151.3125 62.6719 L153.4062 62.25 L154.5938 62.25 L154.5938 70 L156.5312 70 L156.5312 71 L151.4844 71 L151.4844 70 Z" style="fill:black; stroke:none;"
       /><path d="M153.25 50.0781 L154.8281 50.0781 L154.8281 55 L153.25 55 L153.25 50.0781 ZM153.25 48.1562 L154.8281 48.1562 L154.8281 49.4375 L153.25 49.4375 L153.25 48.1562 Z" style="fill:black; stroke:none;"
     /></g
     ><rect width="16.0" x="146.0" height="12.0" id="sdt4" y="46.0" style="stroke-opacity:0; fill-opacity:0;"
-    /><g style="font-family:sans-serif; font-weight:bold;"
-    ><path style="stroke:none;" d="M165.1875 62.25 L167.2969 62.25 L167.2969 65.6094 L167 68.0625 L165.4844 68.0625 L165.1875 65.6094 L165.1875 62.25 ZM165.1875 68.9062 L167.2969 68.9062 L167.2969 71 L165.1875 71 L165.1875 68.9062 Z"
-    /></g
-    ><rect width="8.0" x="162.0" height="16.0" id="sdt5" y="58.0" style="stroke-opacity:0; fill-opacity:0;"
     /><g visibility="hidden" style="stroke:none;font-style:italic;font-size:12px;font-family:&apos;Helvetica&apos;,&apos;SansSerif&apos;;"
     ><rect x="130.25" y="90.0" width="411.15997" style="fill:rgb(230,230,255);stroke:rgb(0,0,80);" rx="2.0" ry="2.0" height="17.0"
       /><text x="131.25" y="103.0"
@@ -58,11 +54,15 @@
       ><set attributeName="visibility" from="hidden" end="sdt0.mouseout" to="visible" begin="sdt0.mouseover"
     /></g
     ><g visibility="hidden" style="stroke:none;font-style:italic;font-size:12px;font-family:&apos;Helvetica&apos;,&apos;SansSerif&apos;;"
-    ><rect x="47.65" y="75.0" width="340.13998" style="fill:rgb(230,230,255);stroke:rgb(0,0,80);" rx="2.0" ry="2.0" height="32.0"
-      /><text x="48.65" y="88.0"
-      >Required: folder, password, hostname, username / </text
+    ><rect x="47.65" y="45.0" width="398.43997" style="fill:rgb(230,230,255);stroke:rgb(0,0,80);" rx="2.0" ry="2.0" height="62.0"
+      /><text x="48.65" y="58.0"
+      >Required: imapHost, password, username / Optional: </text
+      ><text x="48.65" y="73.0"
+      >acceptAllCertificates, deleteAfterRead, enableOperatorLog, </text
+      ><text x="48.65" y="88.0"
+      >encryptionType, folder, imapPort, initDelay, iterations, </text
       ><text x="48.65" y="103.0"
-      >Optional: period</text
+      >period, readNewMailsOnly</text
       ><set attributeName="visibility" from="hidden" end="sdt1.mouseout" to="visible" begin="sdt1.mouseover"
     /></g
     ><g visibility="hidden" style="stroke:none;font-style:italic;font-size:12px;font-family:&apos;Helvetica&apos;,&apos;SansSerif&apos;;"
@@ -82,12 +82,6 @@
       /><text x="165.0" y="60.0"
       >immutable</text
       ><set attributeName="visibility" from="hidden" end="sdt4.mouseout" to="visible" begin="sdt4.mouseover"
-    /></g
-    ><g visibility="hidden" style="stroke:none;font-style:italic;font-size:12px;font-family:&apos;Helvetica&apos;,&apos;SansSerif&apos;;"
-    ><rect x="172.0" y="63.0" width="241.55998" style="fill:rgb(230,230,255);stroke:rgb(0,0,80);" rx="2.0" ry="2.0" height="17.0"
-      /><text x="173.0" y="76.0"
-      >This port is generating punctuations</text
-      ><set attributeName="visibility" from="hidden" end="sdt5.mouseout" to="visible" begin="sdt5.mouseover"
     /></g
   ></g
 ></svg

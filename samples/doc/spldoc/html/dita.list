@@ -1,12 +1,12 @@
-#Fri May 03 17:06:52 CEST 2019
+#Tue May 21 11:47:26 CEST 2019
 copytosourcelist=
-hreftargetslist=dita/tk$SendMailSample/ns$application.xml,dita/tk$SendMailSample/ix$Operator.xml,dita/toolkits/ix$Namespace.xml,dita/toolkits/ix$Operator.xml,dita/tk$SendMailSample/ix$Namespace.xml,dita/tk$SendMailSample/tk$SendMailSample.xml,dita/tk$SendMailSample/spl$application$SendMailSample.xml,dita/toolkits/toolkits.xml
+hreftargetslist=dita/tk$SendMailSample/ns$application.xml,dita/tk$ReadMailSample/ix$Namespace.xml,dita/tk$SendMailSample/ix$Operator.xml,dita/tk$ReadMailSample/spl$application$ReadMailSample.xml,dita/toolkits/ix$Namespace.xml,dita/toolkits/ix$Operator.xml,dita/tk$SendMailSample/ix$Namespace.xml,dita/tk$SendMailSample/tk$SendMailSample.xml,dita/tk$ReadMailSample/ix$Operator.xml,dita/tk$SendMailSample/spl$application$SendMailSample.xml,dita/tk$ReadMailSample/tk$ReadMailSample.xml,dita/toolkits/toolkits.xml,dita/tk$ReadMailSample/ns$application.xml
 fullditatopicfile=fullditatopic.list
 fullditamapandtopicfile=fullditamapandtopic.list
-fullditatopiclist=dita/tk$SendMailSample/ns$application.xml,dita/tk$SendMailSample/ix$Operator.xml,dita/toolkits/ix$Namespace.xml,dita/toolkits/ix$Operator.xml,dita/tk$SendMailSample/ix$Namespace.xml,dita/tk$SendMailSample/tk$SendMailSample.xml,dita/tk$SendMailSample/spl$application$SendMailSample.xml,dita/toolkits/toolkits.xml
-fullditamapandtopiclist=dita/tk$SendMailSample/ns$application.xml,dita/toolkits.ditamap,dita/tk$SendMailSample/ix$Operator.xml,dita/toolkits/ix$Namespace.xml,dita/toolkits/ix$Operator.xml,dita/tk$SendMailSample/ix$Namespace.xml,dita/tk$SendMailSample/tk$SendMailSample.xml,dita/tk$SendMailSample/spl$application$SendMailSample.xml,dita/toolkits/toolkits.xml
+fullditatopiclist=dita/tk$SendMailSample/ns$application.xml,dita/tk$ReadMailSample/ix$Namespace.xml,dita/tk$SendMailSample/ix$Operator.xml,dita/tk$ReadMailSample/spl$application$ReadMailSample.xml,dita/toolkits/ix$Namespace.xml,dita/toolkits/ix$Operator.xml,dita/tk$SendMailSample/ix$Namespace.xml,dita/tk$SendMailSample/tk$SendMailSample.xml,dita/tk$ReadMailSample/ix$Operator.xml,dita/tk$SendMailSample/spl$application$SendMailSample.xml,dita/tk$ReadMailSample/tk$ReadMailSample.xml,dita/toolkits/toolkits.xml,dita/tk$ReadMailSample/ns$application.xml
+fullditamapandtopiclist=dita/tk$SendMailSample/ns$application.xml,dita/tk$ReadMailSample/ix$Namespace.xml,dita/toolkits.ditamap,dita/tk$SendMailSample/ix$Operator.xml,dita/tk$ReadMailSample/spl$application$ReadMailSample.xml,dita/toolkits/ix$Namespace.xml,dita/toolkits/ix$Operator.xml,dita/tk$SendMailSample/ix$Namespace.xml,dita/tk$SendMailSample/tk$SendMailSample.xml,dita/tk$ReadMailSample/ix$Operator.xml,dita/tk$SendMailSample/spl$application$SendMailSample.xml,dita/tk$ReadMailSample/tk$ReadMailSample.xml,dita/toolkits/toolkits.xml,dita/tk$ReadMailSample/ns$application.xml
 hrefditatopicfile=hrefditatopic.list
-hrefditatopiclist=dita/tk$SendMailSample/ns$application.xml,dita/tk$SendMailSample/ix$Operator.xml,dita/toolkits/ix$Namespace.xml,dita/toolkits/ix$Operator.xml,dita/tk$SendMailSample/ix$Namespace.xml,dita/tk$SendMailSample/tk$SendMailSample.xml,dita/tk$SendMailSample/spl$application$SendMailSample.xml,dita/toolkits/toolkits.xml
+hrefditatopiclist=dita/tk$SendMailSample/ns$application.xml,dita/tk$ReadMailSample/ix$Namespace.xml,dita/tk$SendMailSample/ix$Operator.xml,dita/tk$ReadMailSample/spl$application$ReadMailSample.xml,dita/toolkits/ix$Namespace.xml,dita/toolkits/ix$Operator.xml,dita/tk$SendMailSample/ix$Namespace.xml,dita/tk$SendMailSample/tk$SendMailSample.xml,dita/tk$ReadMailSample/ix$Operator.xml,dita/tk$SendMailSample/spl$application$SendMailSample.xml,dita/tk$ReadMailSample/tk$ReadMailSample.xml,dita/toolkits/toolkits.xml,dita/tk$ReadMailSample/ns$application.xml
 user.input.file=dita/toolkits.ditamap
 subtargetsfile=subtargets.list
 fullditamapfile=fullditamap.list
@@ -23,11 +23,11 @@ conreflist=
 resourceonlyfile=resourceonly.list
 imagefile=image.list
 resourceonlylist=
-imagelist=image/tk$SendMailSample/op$application$SendMailSample.svg
+imagelist=image/tk$ReadMailSample/op$application$ReadMailSample.svg,image/tk$SendMailSample/op$application$SendMailSample.svg
 htmlfile=html.list
 htmllist=
 canditopicsfile=canditopics.list
-canditopicslist=dita/tk$SendMailSample/ns$application.xml,dita/tk$SendMailSample/ix$Operator.xml,dita/toolkits/ix$Namespace.xml,dita/toolkits/ix$Operator.xml,dita/tk$SendMailSample/ix$Namespace.xml,dita/tk$SendMailSample/tk$SendMailSample.xml,dita/tk$SendMailSample/spl$application$SendMailSample.xml,dita/toolkits/toolkits.xml
+canditopicslist=dita/tk$SendMailSample/ns$application.xml,dita/tk$ReadMailSample/ix$Namespace.xml,dita/tk$SendMailSample/ix$Operator.xml,dita/tk$ReadMailSample/spl$application$ReadMailSample.xml,dita/toolkits/ix$Namespace.xml,dita/toolkits/ix$Operator.xml,dita/tk$SendMailSample/ix$Namespace.xml,dita/tk$SendMailSample/tk$SendMailSample.xml,dita/tk$ReadMailSample/ix$Operator.xml,dita/tk$SendMailSample/spl$application$SendMailSample.xml,dita/tk$ReadMailSample/tk$ReadMailSample.xml,dita/toolkits/toolkits.xml,dita/tk$ReadMailSample/ns$application.xml
 keyreffile=keyref.list
 subjectschemefile=subjectscheme.list
 keyreflist=

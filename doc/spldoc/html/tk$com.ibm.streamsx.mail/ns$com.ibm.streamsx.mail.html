@@ -22,17 +22,17 @@
 <div class="body refbody">
 <div class="section">
 <p class="p">
-<a class="xref" href="../toolkits/toolkits.html">IBMStreams com.ibm.streamsx.mail Toolkit</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.mail.html">com.ibm.streamsx.mail 1.0.1</a> &gt; com.ibm.streamsx.mail</p>
+<a class="xref" href="../toolkits/toolkits.html">IBMStreams streamsx.mail Toolkit</a> &gt; <a class="xref" href="tk$com.ibm.streamsx.mail.html">com.ibm.streamsx.mail 2.0.0</a> &gt; com.ibm.streamsx.mail</p>
 
 </div>
 
 <div class="section"><h2 class="title sectiontitle splhead-1">Operators</h2>
   
 <ul class="sl simple">
-<li class="sli"><strong class="ph b"><a class="xref" href="op$com.ibm.streamsx.mail$ReadMail.html">ReadMail</a></strong>: Java Operator ReadMail
+<li class="sli"><strong class="ph b"><a class="xref" href="op$com.ibm.streamsx.mail$ReadMail.html">ReadMail</a></strong>: The ReadMail operator reads e-mails from an imap server and ingests one tuple for each received e-mail.This operator supports the following encryption methods: 
 </li>
 
-<li class="sli"><strong class="ph b"><a class="xref" href="op$com.ibm.streamsx.mail$SendMail.html">SendMail</a></strong>: Java Operator SendMail
+<li class="sli"><strong class="ph b"><a class="xref" href="op$com.ibm.streamsx.mail$SendMail.html">SendMail</a></strong>: This operator sends out an e-mail, when a tuple arrives at the input port.
 </li>
 
 </ul>
@@ -42,7 +42,13 @@
 <div class="section"><h2 class="title sectiontitle splhead-1">Types</h2>
   
 <ul class="sl simple">
-<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.mail$Types.html#spldoc_compilationunit__type__MAIL">MAIL</a></strong>
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.mail$Types.html#spldoc_compilationunit__type__Mail">Mail</a></strong>: Output schema of the ReadMail operator 
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.mail$Types.html#spldoc_compilationunit__type__Maile">Maile</a></strong>: Extended output schema of the ReadMail operator with error information 
+</li>
+
+<li class="sli"><strong class="ph b"><a class="xref" href="spl$com.ibm.streamsx.mail$Types.html#spldoc_compilationunit__type__RuntimeError">RuntimeError</a></strong>: Minimum output schema for the optional error port 
 </li>
 
 </ul>
