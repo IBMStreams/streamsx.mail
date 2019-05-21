@@ -1,0 +1,67 @@
+namespace application;
+
+use com.ibm.streamsx.mail::*;
+
+/**
+ * This sample demonstrates the use of the ReadMail operator.
+ * This sample connects to an imap server and receives all e-mails in folder 'INBOX'.
+ * The operator performs 2 scan cycles.
+ * Provide the parameters for an e-mail account and adapt the 
+ * encryption type if required.
+ * 
+ * @param   imapHost  The imap server name/address
+ * @param   imapPort  The SMTP host port
+ * @param   username  e-mail account username
+ * @param   password  e-mail account password
+ */
+public composite ReadMailSample {
+	param
+		expression<rstring> $imapHost :        getSubmissionTimeValue("imapHost");
+		expression<int32>   $imapPort : (int32)getSubmissionTimeValue("imapPort", "993");
+		expression<rstring> $username :        getSubmissionTimeValue("username");
+		expression<rstring> $password :        getSubmissionTimeValue("password");
+
+	graph
+		(
+			stream<Maile> MailStream;
+			stream<RuntimeError> MailErrorStream
+		) = ReadMail() {
+			param
+				imapHost: $imapHost;
+				imapPort: $imapPort;
+				username: $username;
+				password: $password;
+				iterations: 2l;
+				period: 20.0;
+				//readNewMailsOnly: true;
+				//deleteAfterRead: true;
+				//acceptAllCertificates: true;
+		}
+		
+		() as Sink = Custom(MailStream as I) {
+			logic
+				onTuple I : {
+					timestamp tim = createTimestamp(I.date, 0u);
+					rstring timeString = ctime(tim);
+					printStringLn(timeString + "::" + I.subject);
+					println(I);
+					printStringLn("*****************************************************");
+				}
+				onPunct I : println(currentPunct());
+		}
+
+		() as ErrorSink = Custom(MailErrorStream as I) {
+			logic
+				onTuple I : {
+					printStringLn("ERROR *****************************************************");
+					rstring timeString = ctime(I.ts);
+					printStringLn(timeString + ":" + (rstring)I);
+					printStringLn("ERROR *****************************************************");
+				}
+				onPunct I : println(currentPunct());
+		}
+
+	config
+		restartable: false;
+
+}

@@ -1,0 +1,41 @@
+use com.ibm.streamsx.mail::*;
+use com.ibm.streamsx.testframe::*;
+
+public composite Main {
+	param
+		expression<rstring> $smtpHost :        getCompileTimeValue("smtpHost");
+		//expression<int32>   $smtpPort : (int32)getSubmissionTimeValue("smtpPort");
+		expression<rstring> $from :            getCompileTimeValue("from");
+		expression<rstring> $to :              getCompileTimeValue("to");
+		expression<rstring> $uniqId :          getCompileTimeValue("uniqId");
+
+	graph
+		stream<uint64 count, rstring to, rstring uniqId> TriggerStreams as O = Beacon() {
+			param
+				iterations: 3;
+				period: 1.0;
+			output
+				O: count = IterationCount() + 1ul,
+					to = $to,
+					uniqId = $uniqId;
+		}
+
+		//<!*port>() as MailSink = SendMail(TriggerStreams as I) {
+		//<*port>stream<RuntimeError> ErrorStream = SendMail(TriggerStreams as I) {
+			param
+				//<smtps*>encryptionType: TLS;
+				//<smtps*>acceptAllCertificates: true;
+				smtpHost: $smtpHost;
+				from: $from;
+				toAttribute: to;
+				//<smtpp smtpp_port>content: "Mail from streams: number ", "count", " was sent.\nUniqId: ", "uniqId";
+				//<smtps smtps_port>content: "Securte Mail from streams: number ", "count", " was sent.\nUniqId: ", "uniqId";
+				//<smtpp_subject>content: "Mail from streams: number ", "count", " was sent.";
+				//<smtps_subject>content: "Securte Mail from streams: number ", "count", " was sent.";
+				//<*subject>subject: "uniqId";
+		}
+
+		//<*port>() as ErrorSink = FileSink1(ErrorStream) { }
+	config
+		restartable: false;
+}
