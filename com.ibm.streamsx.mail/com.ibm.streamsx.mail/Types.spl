@@ -18,7 +18,7 @@ namespace com.ibm.streamsx.mail;
 type Mail = rstring to, rstring replyto, rstring from, int64 date, rstring subject, list<rstring> contentType, list<rstring> content;
 
 /**
- * Extended output schema of the ReadMail operator
+ * Extended output schema of the ReadMail operator with error information
  *  * to - the list of the e-mail recipients
  *  * replyto - the envelop return address of the e-mail
  *  * from - from address

@@ -50,6 +50,7 @@ import com.ibm.streams.operator.model.PrimitiveOperator;
 		{
 			@OutputPortSet(
 					description="Port that produces tuples for each received e-mail. The schema must be of type [com.ibm.streamsx.mail::Mail|com.ibm.streamsx.mail::Mail] "
+							+ "or of type [com.ibm.streamsx.mail::Maile|com.ibm.streamsx.mail::Maile]. "
 							+ "Every message part of type `text/plain` and `text/HTML` is converted to an `rstring` element of the attribute `content`."
 							+ "Multipart messages are supported.",
 					cardinality=1,
