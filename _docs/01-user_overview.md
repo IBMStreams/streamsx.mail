@@ -11,6 +11,9 @@ sidebar:
 {% include toc %}
 {%include editme %}
 
+## How to use the toolkit
+
+[README.md](https://github.com/IBMStreams/streamsx.mail/blob/master/README.md)
 
 ## SPLDOC
 
