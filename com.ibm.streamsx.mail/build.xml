@@ -19,9 +19,9 @@
 	<property name="gensrc.dir"   location="impl/java/src-gen"/>  <!-- avoid .java files in jar file -->
 	<property name="impl.lib.dir" location="impl/lib"/>
 	<property name="lib.dir"      location="lib" />
-	<property name="bin.dir"      location="impl/java/bin"/>      <!-- streams studio bin dir / used only on clean target -->
-	<property name="gensrc.dir2"  location="impl/java/src-gen2"/> <!-- streams studio bin dir / used only on clean target -->
-	<property name="out.dir"      location="output"/>             <!-- streams studio bin dir / used only on clean target -->
+	<property name="bin.dir"      location="impl/java/studio-build"/> <!-- streams studio bin dir / used only on clean target -->
+	<property name="gensrc.dir2"  location="impl/java/src-gen2"/>     <!-- streams studio bin dir / used only on clean target -->
+	<property name="out.dir"      location="output"/>                 <!-- streams studio bin dir / used only on clean target -->
 
 
 	<target name="init">
@@ -50,6 +50,7 @@
 
 	<!-- clean up the studio generated files to avoide duplicate warnings from spl-make-toolkit -->
 	<target name="clean-studio-artefacts">
+		<echo message="Clean all studio artifacts "/>
 		<delete dir="${bin.dir}"/>
 		<delete dir="${gensrc.dir2}"/>
 		<delete dir="${out.dir}"/>
