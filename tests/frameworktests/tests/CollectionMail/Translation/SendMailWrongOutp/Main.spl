@@ -1,0 +1,29 @@
+
+use com.ibm.streamsx.mail::*;
+
+public composite Main {
+	graph
+		stream<uint64 count> TriggerStreams as O = Beacon() {
+			param
+				iterations: 3;
+				period: 3.0;
+			output
+				O: count = IterationCount() + 1ul;
+		}
+		
+		stream<timestamp ts, rstring operatorName, rstring message, rstring cause> ErrorStream = SendMail(TriggerStreams as I) {
+			param
+				smtpHost: "localhost";
+				from: "streamsadmin@localhost";
+				to: "User@anyhost";
+				content: "Mail from streams: number ", "count", " was sent.";
+		}
+		
+		() as ErrorSink = Custom(ErrorStream as I) {
+			logic
+				onTuple I: println(I);
+		}
+
+	config
+		restartable: false;
+}
