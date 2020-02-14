@@ -1,5 +1,8 @@
 # Changes
 
+## v2.0.1
+* Globalization support
+
 ## v2.0.0
 * New global build script with new targets: spldoc, test, release
 * Update of used lib javax.mail to 1.6.2
