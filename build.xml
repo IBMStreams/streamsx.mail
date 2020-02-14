@@ -46,19 +46,21 @@
 	</exec>
 	
 	<target name="all"   depends="toolkit,spldoc"
-		description="Main target: Build all toolkit artifacts, toolkit documentation and samples doc - incremental build"/>
+		description="Main target: Build all toolkit artifacts, toolkit documentation and samples doc - incremental build"
+	/>
 	
-	<target name="clean" depends="spldoc-clean,samples-clean,toolkit-clean,releaseinfo-clean"
-		description="Main target: Clean all generated and downloaded toolkit files, clean samples and clean the documentation"/>
+	<target name="clean" depends="spldoc-clean,samples-clean,test-clean,toolkit-clean,releaseinfo-clean"
+		description="Main target: Clean all generated and downloaded toolkit files, clean samples and clean the documentation">
+	</target>
 
 	<target name="toolkit"
 		description="Main target: Build toolkit code and index the toolkit - incremental build.">
 		<ant dir="${toolkit.dir}" target="toolkit" />
 	</target>
 	
-	<target name="toolkit-clean"
-		description="Main target: Clean all generated and downloaded toolkit files and cleans samples">
-		<ant dir="${toolkit.dir}" target="clean-all" />
+	<target name="toolkit-clean" depends="samples-clean"
+		description="Main target: Clean all generated toolkit files and cleans samples">
+		<ant dir="${toolkit.dir}" target="clean" />
 	</target>
 
 	<target name="spldoc" depends="toolkit"
