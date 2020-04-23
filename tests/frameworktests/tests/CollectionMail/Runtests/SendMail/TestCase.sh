@@ -1,14 +1,15 @@
-#--variantList='smtpp smtps smtpp_subject smtps_subject smtpp_port smtps_port'
+# test case varians must start with a common pattern because we search for the pattern in the emails
+#--variantList='0smtpp 1smtps 2smtpp_subject 3smtps_subject 4smtpp_port 5smtps_port'
 
 setCategory 'quick'
 
 declare -A myExplain=(
-	[smtpp]='**** Send 3 simple mails with (plain) SMTP and check whether 3 e-mail with matching content are in inbox ****'
-	[smtps]='**** Send 3 simple mails with SMTPS and check whether 3 e-mail with matching content are in inbox ****'
-	[smtpp_subject]='**** Send 3 simple mails with (plain) SMTP and put the uniq id into header ****'
-	[smtps_subject]='**** Send 3 simple mails with SMTPS and put the uniq id into header ****'
-	[smtpp_port]='**** Send 3 simple mails with (plain) SMTP use optional error port ****'
-	[smtps_port]='**** Send 3 simple mails with SMTPS use optional error port ****'
+	[0smtpp]='**** Send 3 simple mails with (plain) SMTP and check whether 3 e-mail with matching content are in inbox ****'
+	[1smtps]='**** Send 3 simple mails with SMTPS and check whether 3 e-mail with matching content are in inbox ****'
+	[2smtpp_subject]='**** Send 3 simple mails with (plain) SMTP and put the uniq id into header ****'
+	[3smtps_subject]='**** Send 3 simple mails with SMTPS and put the uniq id into header ****'
+	[4smtpp_port]='**** Send 3 simple mails with (plain) SMTP use optional error port ****'
+	[5smtps_port]='**** Send 3 simple mails with SMTPS use optional error port ****'
 )
 
 PREPS=(

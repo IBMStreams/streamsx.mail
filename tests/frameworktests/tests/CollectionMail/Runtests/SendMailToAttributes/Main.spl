@@ -24,8 +24,8 @@ public composite Main {
 				smtpHost: $smtpHost;
 				from: $from;
 				to: $to;
-				//<ccAttribute>ccAttribute: rcpt;
-				//<bccAttribute>bccAttribute: rcpt;
+				//<2ccAttribute>ccAttribute: rcpt;
+				//<3bccAttribute>bccAttribute: rcpt;
 				content: "Mail from streams: number ", "count", " was sent.\nUniqId: ", "uniqId";
 		}
 

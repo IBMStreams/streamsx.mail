@@ -23,15 +23,15 @@ public composite Main {
 		//<!*port>() as MailSink = SendMail(TriggerStreams as I) {
 		//<*port>stream<RuntimeError> ErrorStream = SendMail(TriggerStreams as I) {
 			param
-				//<smtps*>encryptionType: TLS;
-				//<smtps*>acceptAllCertificates: true;
+				//<*smtps*>encryptionType: TLS;
+				//<*smtps*>acceptAllCertificates: true;
 				smtpHost: $smtpHost;
 				from: $from;
 				toAttribute: to;
-				//<smtpp smtpp_port>content: "Mail from streams: number ", "count", " was sent.\nUniqId: ", "uniqId";
-				//<smtps smtps_port>content: "Securte Mail from streams: number ", "count", " was sent.\nUniqId: ", "uniqId";
-				//<smtpp_subject>content: "Mail from streams: number ", "count", " was sent.";
-				//<smtps_subject>content: "Securte Mail from streams: number ", "count", " was sent.";
+				//<0smtpp 4smtpp_port>content: "Mail from streams: number ", "count", " was sent.\nUniqId: ", "uniqId";
+				//<1smtps 5smtps_port>content: "Securte Mail from streams: number ", "count", " was sent.\nUniqId: ", "uniqId";
+				//<2smtpp_subject>content: "Mail from streams: number ", "count", " was sent.";
+				//<3smtps_subject>content: "Securte Mail from streams: number ", "count", " was sent.";
 				//<*subject>subject: "uniqId";
 		}
 
