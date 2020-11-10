@@ -4,6 +4,9 @@ The toolkit for sending or receiving emails in an IBM Streams application.
 
 Find the project Documentation at: http://ibmstreams.github.io/streamsx.mail/
 
+## Changes
+[CHANGELOG.md](com.ibm.streamsx.mail/CHANGELOG.md)
+
 ## How to use this toolkit
 
 1. Download and unpack the latest release archive from: [releases]: https://github.com/IBMStreams/streamsx.mail/releases 

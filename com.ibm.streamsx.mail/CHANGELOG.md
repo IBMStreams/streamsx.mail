@@ -1,5 +1,8 @@
 # Changes
 
+## develop branch latest
+* Makefiles of samples prepared for CP4D build service, for example build with Streams extension in VS Code
+
 ## v2.0.1
 * Globalization support
 
